@@ -5,10 +5,26 @@ import { Dataset, ProcessNode, ProcessLink } from '../types';
 
 interface Props {
   dataset: Dataset;
-  animationSpeed: number;
+  initialAnimationSpeed?: number;
 }
 
-const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed }) => {
+const CATEGORY_COLORS: Record<string, string> = {
+  'ADMIN': '#6366f1',
+  'OPS': '#f59e0b',
+  'CULTURA': '#10b981',
+  'TALENTO': '#8b5cf6',
+  'SOURCING': '#3b82f6',
+  'TECH': '#ef4444',
+  'FINANCE': '#10b981',
+  'LOGISTICS': '#6366f1',
+  'ENTRY': '#64748b',
+  'FIELD': '#d946ef',
+  'LEGAL': '#0f172a',
+  'EXEC': '#f43f5e',
+  'DEFAULT': '#cbd5e1'
+};
+
+const ProcessGraph: React.FC<Props> = ({ dataset, initialAnimationSpeed = 0.8 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const gRef = useRef<SVGGElement>(null);
@@ -16,6 +32,10 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed }) => {
   
   const [simplification, setSimplification] = useState(0.85);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [speed, setSpeed] = useState(initialAnimationSpeed);
+  const [isPaused, setIsPaused] = useState(false);
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
 
   const filteredData = useMemo(() => {
     if (dataset.links.length === 0) return { nodes: dataset.nodes, links: [] };
@@ -44,14 +64,6 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed }) => {
     }
   };
 
-  const handleZoomIn = () => {
-    if (svgRef.current && zoomRef.current) d3.select(svgRef.current).transition().duration(300).call(zoomRef.current.scaleBy, 1.3);
-  };
-
-  const handleZoomOut = () => {
-    if (svgRef.current && zoomRef.current) d3.select(svgRef.current).transition().duration(300).call(zoomRef.current.scaleBy, 0.7);
-  };
-
   const handleFitView = useCallback(() => {
     if (!svgRef.current || !gRef.current || !zoomRef.current) return;
     const bounds = gRef.current.getBBox();
@@ -60,18 +72,12 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed }) => {
     const fullHeight = svgRef.current.clientHeight;
     const midX = bounds.x + bounds.width / 2;
     const midY = bounds.y + bounds.height / 2;
-    const padding = 60;
-    const scale = 0.95 / Math.max(bounds.width / (fullWidth - padding), bounds.height / (fullHeight - padding));
-    d3.select(svgRef.current).transition().duration(750).ease(d3.easeCubicInOut).call(
+    const padding = 120;
+    const scale = 0.85 / Math.max(bounds.width / (fullWidth - padding), bounds.height / (fullHeight - padding));
+    d3.select(svgRef.current).transition().duration(800).ease(d3.easeCubicInOut).call(
       zoomRef.current.transform,
-      d3.zoomIdentity.translate(fullWidth / 2, fullHeight / 2).scale(Math.min(scale, 1.5)).translate(-midX, -midY)
+      d3.zoomIdentity.translate(fullWidth / 2, fullHeight / 2).scale(Math.min(scale, 1.1)).translate(-midX, -midY)
     );
-  }, []);
-
-  useEffect(() => {
-    const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', handleFsChange);
-    return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
   useEffect(() => {
@@ -87,79 +93,100 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed }) => {
 
     const zoom = d3.zoom<SVGSVGElement, any>()
       .scaleExtent([0.1, 4])
-      .on("zoom", (event) => g.attr("transform", event.transform));
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform);
+        setZoomLevel(event.transform.k);
+      });
     zoomRef.current = zoom;
     svg.call(zoom);
-
-    const defs = svg.append("defs");
-    defs.append("marker")
-      .attr("id", "arrowhead")
-      .attr("viewBox", "0 0 10 10")
-      .attr("refX", 58)
-      .attr("refY", 5)
-      .attr("orient", "auto")
-      .attr("markerWidth", 8)
-      .attr("markerHeight", 8)
-      .append("path")
-      .attr("d", "M 0 0 L 10 5 L 0 10 z")
-      .attr("fill", "#6366f1");
 
     const { nodes, links } = filteredData;
     const maxWeight = d3.max(dataset.links, d => d.weight) || 1;
 
+    // Simulation tuned for stability (less bounce, more control)
     const simulation = d3.forceSimulation(nodes as any)
-      .force("link", d3.forceLink(links).id((d: any) => d.id).distance(160).strength(1))
-      .force("charge", d3.forceManyBody().strength(-2500))
+      .force("link", d3.forceLink(links).id((d: any) => d.id).distance(280).strength(0.4))
+      .force("charge", d3.forceManyBody().strength(-3500))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("x", d3.forceX(width / 2).strength(0.5))
+      .force("categoryX", d3.forceX((d: any) => {
+          const cats = Array.from(new Set(nodes.map((n: any) => n.category)));
+          const idx = cats.indexOf(d.category);
+          return (width * 0.15) + (idx * (width * 0.7) / (cats.length || 1));
+      }).strength(0.6))
       .force("y", d3.forceY((d: any, i: number) => {
-        const step = (height * 0.8) / (nodes.length || 1);
-        return (height * 0.1) + (i * step);
-      }).strength(2.2))
-      .force("collision", d3.forceCollide().radius(110));
+        const step = (height * 0.6) / (nodes.length || 1);
+        return (height * 0.2) + (i * step);
+      }).strength(1.5))
+      .force("collision", d3.forceCollide().radius(150))
+      .alphaDecay(0.05); // Faster stabilization
 
     const linkLayer = g.append("g").attr("class", "links");
     const nodeLayer = g.append("g").attr("class", "nodes");
     const labelLayer = g.append("g").attr("class", "labels");
     const tokenLayer = g.append("g").attr("class", "tokens");
 
+    const colorScale = d3.scaleLinear<string>()
+      .domain([0, maxWeight * 0.4, maxWeight])
+      .range(["#cbd5e1", "#f59e0b", "#ef4444"]);
+
     const linkElements = linkLayer.selectAll("path")
       .data(links)
       .enter().append("path")
       .attr("fill", "none")
-      .attr("stroke", "#e2e8f0")
-      .attr("stroke-width", d => Math.max(3, (d.weight / maxWeight) * 15))
-      .attr("marker-end", "url(#arrowhead)")
+      .attr("stroke", d => colorScale(d.weight))
+      .attr("stroke-width", d => Math.max(2, (d.weight / maxWeight) * 24))
       .attr("stroke-linecap", "round")
-      .style("opacity", 0.6);
+      .style("opacity", 0.45);
 
     const linkLabels = labelLayer.selectAll("g")
       .data(links)
       .enter().append("g");
+    
     linkLabels.append("rect")
-      .attr("width", 34).attr("height", 16).attr("rx", 4).attr("fill", "#ffffff").attr("stroke", "#e2e8f0");
+      .attr("width", 44).attr("height", 22).attr("rx", 8).attr("fill", "#ffffff").attr("stroke", "#e2e8f0")
+      .style("opacity", zoomLevel < 0.6 ? 0.1 : 1);
+    
     linkLabels.append("text")
-      .attr("font-size", "9px").attr("font-weight", "900").attr("fill", "#6366f1").attr("text-anchor", "middle").attr("dy", "11").attr("dx", "17").text(d => d.weight);
+      .attr("font-size", "11px").attr("font-weight", "900").attr("fill", d => d.weight > maxWeight * 0.7 ? "#ef4444" : "#475569")
+      .attr("text-anchor", "middle").attr("dy", "15").attr("dx", "22").text(d => d.weight)
+      .style("opacity", zoomLevel < 0.6 ? 0.2 : 1);
 
     const nodeElements = nodeLayer.selectAll("g")
       .data(nodes).enter().append("g")
-      .call(d3.drag<any, any>().on("start", (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }).on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; }).on("end", (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }));
+      .on("click", (e, d: any) => setSelectedNode(d.id === selectedNode ? null : d.id))
+      .call(d3.drag<any, any>()
+        .on("start", (e, d) => { if (!e.active) simulation.alphaTarget(0.2).restart(); d.fx = d.x; d.fy = d.y; })
+        .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+        .on("end", (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }));
 
+    // Node Visuals - More "Enterprise" style
     nodeElements.append("rect")
-      .attr("width", 200).attr("height", 54).attr("x", -100).attr("y", -27).attr("rx", 12)
-      .attr("fill", (d: any, i: number) => i === 0 ? "rgba(99,102,241,0.08)" : i === nodes.length - 1 ? "rgba(16,185,129,0.08)" : "#ffffff")
-      .attr("stroke", (d: any, i: number) => i === 0 ? "#6366f1" : i === nodes.length - 1 ? "#10b981" : "#e2e8f0")
-      .attr("stroke-width", 2).style("cursor", "pointer").style("filter", "drop-shadow(0 4px 6px rgba(0,0,0,0.05))");
+      .attr("width", 240).attr("height", 68).attr("x", -120).attr("y", -34).attr("rx", 18)
+      .attr("fill", "#ffffff").attr("stroke", (d: any) => selectedNode === d.id ? "#5c56f1" : CATEGORY_COLORS[d.category || 'DEFAULT'])
+      .attr("stroke-width", d => selectedNode === d.id ? 4 : 2.5)
+      .style("cursor", "pointer").style("filter", "drop-shadow(0 12px 24px rgba(0,0,0,0.05))")
+      .style("opacity", zoomLevel < 0.3 ? 0.1 : 1);
+
+    nodeElements.append("circle")
+      .attr("r", 48).attr("fill", (d: any) => CATEGORY_COLORS[d.category || 'DEFAULT'])
+      .style("opacity", zoomLevel < 0.3 ? 0.9 : 0);
 
     nodeElements.append("text")
-      .text((d: any) => d.label).attr("text-anchor", "middle").attr("y", 5).attr("fill", "#0f172a").attr("font-size", "11px").attr("font-weight", "800").style("pointer-events", "none");
+      .text((d: any) => d.label).attr("text-anchor", "middle").attr("y", 5)
+      .attr("fill", "#0f172a").attr("font-size", "14px").attr("font-weight", "900")
+      .style("pointer-events", "none").style("opacity", zoomLevel < 0.3 ? 0 : 1);
+
+    nodeElements.append("text")
+      .text((d: any) => d.category || 'AREA').attr("text-anchor", "middle").attr("y", 6)
+      .attr("fill", "white").attr("font-size", "12px").attr("font-weight", "900")
+      .style("pointer-events", "none").style("opacity", zoomLevel < 0.3 ? 1 : 0);
 
     simulation.on("tick", () => {
       linkElements.attr("d", (d: any) => {
         const dx = d.target.x - d.source.x;
         const dy = d.target.y - d.source.y;
-        const dr = Math.sqrt(dx * dx + dy * dy) * 1.5;
-        const curvature = Math.abs(dx) < 20 ? 0 : dr;
+        const dr = Math.sqrt(dx * dx + dy * dy) * 1.8;
+        const curvature = Math.abs(dx) < 30 ? 0 : dr;
         return `M${d.source.x},${d.source.y} A${curvature},${curvature} 0 0,1 ${d.target.x},${d.target.y}`;
       });
       linkLabels.attr("transform", (d: any) => {
@@ -168,44 +195,130 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed }) => {
         const dx = d.target.x - d.source.x;
         const dy = d.target.y - d.source.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
-        const offsetX = midX + (dy/dist) * 20 - 17;
-        const offsetY = midY - (dx/dist) * 20 - 8;
+        const offsetX = midX + (dy/dist) * 32 - 22;
+        const offsetY = midY - (dx/dist) * 32 - 11;
         return `translate(${offsetX},${offsetY})`;
       });
       nodeElements.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
     });
 
-    setTimeout(handleFitView, 500);
+    setTimeout(handleFitView, 400);
 
-    const tokenInterval = setInterval(() => {
-      if (animationSpeed <= 0 || links.length === 0) return;
+    return () => { simulation.stop(); };
+  }, [filteredData, handleFitView, zoomLevel, selectedNode]);
+
+  // Refined Token Engine
+  useEffect(() => {
+    if (isPaused || speed === 0 || !svgRef.current) return;
+    const svg = d3.select(svgRef.current);
+    const g = svg.select(".main-group");
+    const tokenLayer = g.select(".tokens").empty() ? g.append("g").attr("class", "tokens") : g.select(".tokens");
+    const linkElements = g.selectAll(".links path");
+    const { links } = filteredData;
+    const maxWeight = d3.max(dataset.links, d => d.weight) || 1;
+
+    const spawnToken = () => {
+      if (isPaused) return;
       const weightedIdx = Math.floor(Math.random() * links.length);
+      const link = links[weightedIdx];
       const pathNode = linkElements.nodes()[weightedIdx] as SVGPathElement;
       if (!pathNode) return;
-      tokenLayer.append("circle").attr("r", 4).attr("fill", "#6366f1").style("filter", "drop-shadow(0 0 6px rgba(99,102,241,0.5))")
-        .transition().duration(2500 / animationSpeed).ease(d3.easeLinear).attrTween("transform", () => (t: number) => {
+
+      const weight = link.weight;
+      const isCritical = weight > maxWeight * 0.7;
+      
+      const token = tokenLayer.append("circle")
+        .attr("r", isCritical ? 7 : 5)
+        .attr("fill", isCritical ? "#ef4444" : "#5c56f1")
+        .style("filter", `drop-shadow(0 0 ${isCritical ? '12px' : '8px'} ${isCritical ? '#ef4444' : '#5c56f1'})`)
+        .style("opacity", 1);
+
+      token.transition()
+        .duration((3500 / speed) * (isCritical ? 1.8 : 1)) // Physics: Bottlenecks = slower flow
+        .ease(d3.easeLinear)
+        .attrTween("transform", () => (t: number) => {
           const p = pathNode.getPointAtLength(t * pathNode.getTotalLength());
           return `translate(${p.x},${p.y})`;
-        }).remove();
-    }, 600 / animationSpeed);
-    
-    return () => { simulation.stop(); clearInterval(tokenInterval); };
-  }, [filteredData, animationSpeed, handleFitView]);
+        })
+        .on("end", function() { d3.select(this).remove(); });
+    };
+
+    const interval = setInterval(spawnToken, 550 / speed);
+    return () => clearInterval(interval);
+  }, [isPaused, speed, filteredData, dataset]);
 
   return (
-    <div ref={containerRef} className={`relative w-full h-full bg-white border border-slate-200 rounded-[40px] overflow-hidden group shadow-inner ${isFullscreen ? 'fixed inset-0 z-[100] rounded-none' : ''}`}>
-      <div className="absolute top-8 left-8 z-50 flex items-center gap-4">
-        <button onClick={toggleFullscreen} className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-slate-200 px-6 py-3 rounded-2xl hover:bg-slate-50 transition-all shadow-lg active:scale-95">
-          <span className="text-lg text-slate-700">{isFullscreen ? '⤓' : '⤢'}</span>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">{isFullscreen ? 'RESTAURAR' : 'MAXIMIZAR'}</span>
-        </button>
-        <div className="flex bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl overflow-hidden shadow-lg">
-          <button onClick={handleZoomIn} className="px-5 py-3 hover:bg-slate-50 border-r border-slate-100 font-black text-slate-900 text-lg">+</button>
-          <button onClick={handleZoomOut} className="px-5 py-3 hover:bg-slate-50 border-r border-slate-100 font-black text-slate-900 text-lg">−</button>
-          <button onClick={handleFitView} className="px-5 py-3 hover:bg-slate-50 font-black text-[10px] text-slate-900 uppercase tracking-widest">Ajustar</button>
+    <div ref={containerRef} className={`relative w-full h-full bg-[#fdfdfe] border border-slate-200 rounded-[48px] overflow-hidden group shadow-inner ${isFullscreen ? 'fixed inset-0 z-[100] rounded-none' : ''}`}>
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-10 bg-cover bg-center transition-opacity duration-1000 grayscale"
+        style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2000")' }}
+      />
+
+      {/* Industrial Engineering Control Bar */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[70] bg-white/95 backdrop-blur-2xl border border-slate-200 px-10 py-6 rounded-[40px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] flex items-center gap-10 min-w-[500px] animate-in slide-in-from-bottom-8 duration-700">
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between items-center mb-1">
+             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Velocidad de Análisis</span>
+             <span className={`text-[11px] font-black px-2 py-0.5 rounded-md ${speed < 0.5 ? 'bg-amber-100 text-amber-600' : 'bg-indigo-50 text-[#5c56f1]'}`}>{speed.toFixed(1)}x</span>
+          </div>
+          <div className="flex items-center gap-5">
+            <button onClick={() => setIsPaused(!isPaused)} className={`w-12 h-12 rounded-[20px] flex items-center justify-center transition-all shadow-lg ${isPaused ? 'bg-emerald-500 text-white shadow-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+              <span className="text-xl">{isPaused ? '▶' : '||'}</span>
+            </button>
+            <input 
+              type="range" min="0.1" max="2.5" step="0.1" value={speed} 
+              onChange={(e) => { setSpeed(parseFloat(e.target.value)); setIsPaused(false); }}
+              className="w-56 accent-[#5c56f1] h-2 bg-slate-100 rounded-full cursor-pointer"
+            />
+          </div>
+        </div>
+        
+        <div className="h-12 w-px bg-slate-100"></div>
+
+        <div className="flex flex-col gap-2">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ruido de Proceso</span>
+          <div className="flex bg-slate-50 p-1.5 rounded-2xl border border-slate-100 shadow-inner">
+            {[0.5, 0.85, 1.0].map((val) => (
+              <button 
+                key={val} onClick={() => setSimplification(val)}
+                className={`px-5 py-2 rounded-xl text-[10px] font-black transition-all ${simplification === val ? 'bg-white text-[#5c56f1] shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                {val === 0.5 ? 'LEAN' : val === 0.85 ? 'STD' : 'FULL'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-      <svg ref={svgRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
+
+      {/* Floating Info Cards for CEO/Manager */}
+      <div className="absolute top-10 right-10 z-[60] flex flex-col gap-4 max-w-[280px]">
+         <div className="bg-white/90 backdrop-blur-xl border border-slate-200 p-6 rounded-[32px] shadow-xl animate-in fade-in slide-in-from-right-4">
+            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Diagnóstico Rápido</h4>
+            <div className="space-y-4">
+               <div className="flex justify-between items-center">
+                  <span className="text-[11px] font-bold text-slate-600">Eficiencia</span>
+                  <span className="text-sm font-black text-[#5c56f1]">{dataset.stats.efficiency}%</span>
+               </div>
+               <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-[#5c56f1] h-full" style={{ width: `${dataset.stats.efficiency}%` }}></div>
+               </div>
+               <div className="flex gap-2 items-center text-[10px] font-bold text-emerald-600">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  ROI: {dataset.stats.roi}
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <div className="absolute top-10 left-10 z-50 flex items-center gap-4">
+        <button onClick={toggleFullscreen} className="flex items-center gap-3 bg-white/90 backdrop-blur-md border border-slate-200 px-8 py-4 rounded-[24px] hover:bg-slate-50 transition-all shadow-xl active:scale-95 group">
+          <span className="text-xl text-slate-700 transition-transform group-hover:scale-110">{isFullscreen ? '⤓' : '⤢'}</span>
+          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">{isFullscreen ? 'VISTA VENTANA' : 'VISTA INMERSIVA'}</span>
+        </button>
+        <button onClick={handleFitView} className="bg-white/90 backdrop-blur-md border border-slate-200 px-8 py-4 rounded-[24px] hover:bg-slate-50 transition-all shadow-xl font-black text-[11px] text-slate-900 uppercase tracking-widest">AJUSTAR FOCO</button>
+      </div>
+      
+      <svg ref={svgRef} className="w-full h-full cursor-grab active:cursor-grabbing relative z-10" />
     </div>
   );
 };

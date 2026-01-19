@@ -330,7 +330,8 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex-1 p-8 overflow-hidden relative">
-          {subTab === 'Mapa de Flujo' && <ProcessGraph dataset={selectedDataset} animationSpeed={1} />}
+          {/* Fix: renamed property from animationSpeed to initialAnimationSpeed to satisfy TypeScript constraints */}
+          {subTab === 'Mapa de Flujo' && <ProcessGraph dataset={selectedDataset} initialAnimationSpeed={1} />}
           {subTab === 'Estadísticas' && <Statistics dataset={selectedDataset} />}
           {subTab !== 'Mapa de Flujo' && subTab !== 'Estadísticas' && (
             <div className="flex h-full items-center justify-center text-slate-300 font-black uppercase text-[10px] tracking-widest">
