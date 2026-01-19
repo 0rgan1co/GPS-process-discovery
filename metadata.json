@@ -1,0 +1,7 @@
+{
+  "name": "GPS Process Discovery",
+  "description": "High-performance process mining and AI-driven business intelligence dashboard for flow analysis and executive reporting.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
