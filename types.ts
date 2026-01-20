@@ -2,7 +2,6 @@
 export interface ProcessNode {
   id: string;
   label: string;
-  category?: string; // New field for high-level grouping
   x?: number;
   y?: number;
 }
@@ -11,7 +10,6 @@ export interface ProcessLink {
   source: string;
   target: string;
   weight: number;
-  avgDuration?: number; // Optional: to detect time-based bottlenecks
 }
 
 export interface WasteMetric {
@@ -41,6 +39,10 @@ export interface Initiative {
   progress: number;
   impact: 'low' | 'medium' | 'high';
   owner: string;
+  startDate: string;
+  achievements: string[];
+  obstacles: string[];
+  learnings: string[];
 }
 
 export interface Dataset {

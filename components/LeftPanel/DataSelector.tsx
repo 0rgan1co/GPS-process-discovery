@@ -24,18 +24,18 @@ const DataSelector: React.FC<Props> = ({
 }) => {
   return (
     <div className="shrink-0 flex flex-col gap-4 mb-6">
-      <div className="bg-slate-50 p-1 rounded-xl border border-slate-200 flex shadow-inner">
-        <button onClick={() => { setDataSource('demo'); setSelectedDataset(EXAMPLE_DATASETS[0]); }} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all ${dataSource === 'demo' ? 'bg-[#5c56f1] text-white shadow-md' : 'text-slate-500'}`}>DEMO DATA</button>
-        <button onClick={() => { setDataSource('own'); if(ownDataset) setSelectedDataset(ownDataset); }} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all ${dataSource === 'own' ? 'bg-[#5c56f1] text-white shadow-md' : 'text-slate-500'}`}>PROPIA</button>
+      <div className="bg-slate-100 p-1 rounded-xl border border-slate-200 flex shadow-inner">
+        <button onClick={() => { setDataSource('demo'); setSelectedDataset(EXAMPLE_DATASETS[0]); }} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all ${dataSource === 'demo' ? 'bg-white text-[#5c56f1] shadow-sm' : 'text-slate-500'}`}>DEMO DATA</button>
+        <button onClick={() => { setDataSource('own'); if(ownDataset) setSelectedDataset(ownDataset); }} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all ${dataSource === 'own' ? 'bg-white text-[#5c56f1] shadow-sm' : 'text-slate-500'}`}>PROPIA</button>
       </div>
 
       {dataSource === 'demo' ? (
-        <div onClick={() => setShowDemoMenu(!showDemoMenu)} className="w-full bg-white border border-slate-200 p-3 rounded-xl text-[10px] text-slate-600 font-bold flex justify-between items-center cursor-pointer hover:border-[#5c56f1]/30 transition relative shadow-sm">
+        <div onClick={() => setShowDemoMenu(!showDemoMenu)} className="w-full bg-white border border-slate-200 p-3 rounded-xl text-[10px] text-slate-700 font-bold flex justify-between items-center cursor-pointer hover:border-[#5c56f1]/30 transition relative shadow-sm">
           {selectedDataset.name} <span className="text-[8px] text-slate-400">▼</span>
           {showDemoMenu && (
-            <div className="absolute top-full left-0 w-full mt-2 bg-white border border-slate-200 rounded-xl p-2 z-[60] shadow-2xl">
+            <div className="absolute top-full left-0 w-full mt-2 bg-white border border-slate-200 rounded-xl p-2 z-[60] shadow-2xl animate-in slide-in-from-top-2">
                {EXAMPLE_DATASETS.map(ds => (
-                 <button key={ds.id} onClick={() => { setSelectedDataset(ds); setShowDemoMenu(false); }} className={`w-full text-left px-4 py-2 rounded-lg text-[10px] font-bold transition ${selectedDataset.id === ds.id ? 'bg-[#5c56f1] text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>{ds.name}</button>
+                 <button key={ds.id} onClick={() => { setSelectedDataset(ds); setShowDemoMenu(false); }} className={`w-full text-left px-4 py-2 rounded-lg text-[10px] font-bold transition ${selectedDataset.id === ds.id ? 'bg-slate-50 text-[#5c56f1]' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}>{ds.name}</button>
                ))}
             </div>
           )}
@@ -44,7 +44,7 @@ const DataSelector: React.FC<Props> = ({
         <div className="space-y-3 relative group" onMouseEnter={() => setIsHoveringCSV(true)} onMouseLeave={() => setIsHoveringCSV(false)}>
            <div 
              onClick={() => csvInputRef.current?.click()} 
-             className={`w-full bg-slate-50 border border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center gap-3 hover:border-[#5c56f1]/40 transition-all cursor-pointer shadow-sm ${ownDataset ? 'p-3' : 'p-6'}`}
+             className={`w-full bg-slate-50 border border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center gap-3 hover:border-[#5c56f1]/40 transition-all cursor-pointer ${ownDataset ? 'p-3' : 'p-6'}`}
            >
              {ownDataset ? (
                <div className="flex flex-col items-center text-center space-y-1">
@@ -65,19 +65,18 @@ const DataSelector: React.FC<Props> = ({
            {isHoveringCSV && !ownDataset && (
              <div 
                onClick={() => csvInputRef.current?.click()}
-               className="absolute top-0 left-0 w-full h-full bg-white/95 backdrop-blur-sm z-[60] rounded-2xl p-4 flex flex-col justify-center animate-in fade-in duration-200 border border-[#5c56f1]/30 cursor-pointer shadow-xl"
+               className="absolute top-0 left-0 w-full h-full bg-white/95 backdrop-blur-sm z-[60] rounded-2xl p-4 flex flex-col justify-center animate-in fade-in duration-200 border border-[#5c56f1]/20 cursor-pointer shadow-xl"
              >
-                <div className="space-y-3 pointer-events-none text-center">
+                <div className="space-y-3 pointer-events-none">
                   <span className="text-[9px] font-black text-[#5c56f1] uppercase tracking-[0.3em] block border-b border-slate-100 pb-1">REQUERIMIENTOS</span>
-                  <div className="grid grid-cols-2 gap-2 text-left">
-                     {['Case ID', 'Activity', 'Timestamp', 'Resource'].map(field => (
+                  <div className="grid grid-cols-2 gap-2">
+                     {['Case ID', 'Activity', 'Timestamp'].map(field => (
                        <div key={field} className="flex items-center gap-2">
                           <div className="w-1 h-1 rounded-full bg-[#5c56f1]"></div>
                           <span className="text-[8px] font-black text-slate-500 uppercase">{field}</span>
                        </div>
                      ))}
                   </div>
-                  <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-1">Límite Demo: 30KB</p>
                   <div className="text-center pt-2">
                     <span className="text-[8px] font-black text-[#5c56f1] uppercase animate-pulse">Haz clic para subir</span>
                   </div>

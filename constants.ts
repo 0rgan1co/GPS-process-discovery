@@ -29,13 +29,13 @@ export const EXAMPLE_DATASETS: Dataset[] = [
     name: '[RRHH] Onboarding de Talento',
     description: 'Proceso de incorporación desde oferta hasta integración total.',
     nodes: [
-      { id: '1', label: 'Oferta Aceptada', category: 'ADMIN' },
-      { id: '2', label: 'Verificación Documental', category: 'ADMIN' },
-      { id: '3', label: 'Firma de Contrato', category: 'ADMIN' },
-      { id: '4', label: 'Solicitud IT (Cuentas/Hardware)', category: 'OPS' },
-      { id: '5', label: 'Bienvenida Corporativa', category: 'CULTURA' },
-      { id: '6', label: 'Training de Puesto', category: 'TALENTO' },
-      { id: '7', label: 'Evaluación Mes 1', category: 'TALENTO' }
+      { id: '1', label: 'Oferta Aceptada' },
+      { id: '2', label: 'Verificación Documental' },
+      { id: '3', label: 'Firma de Contrato' },
+      { id: '4', label: 'Solicitud IT (Cuentas/Hardware)' },
+      { id: '5', label: 'Bienvenida Corporativa' },
+      { id: '6', label: 'Training de Puesto' },
+      { id: '7', label: 'Evaluación Mes 1' }
     ],
     links: [
       { source: '1', target: '2', weight: 100 },
@@ -59,13 +59,13 @@ export const EXAMPLE_DATASETS: Dataset[] = [
     name: '[COMPRAS] Cadena de Suministro',
     description: 'Adquisición de insumos críticos para producción.',
     nodes: [
-      { id: '1', label: 'Detección de Necesidad', category: 'SOURCING' },
-      { id: '2', label: 'Solicitud de Cotizaciones', category: 'SOURCING' },
-      { id: '3', label: 'Comparativa Técnica', category: 'TECH' },
-      { id: '4', label: 'Aprobación de Gasto', category: 'FINANCE' },
-      { id: '5', label: 'Emisión PO', category: 'FINANCE' },
-      { id: '6', label: 'Seguimiento Logístico', category: 'LOGISTICS' },
-      { id: '7', label: 'Ingreso a Almacén', category: 'LOGISTICS' }
+      { id: '1', label: 'Detección de Necesidad' },
+      { id: '2', label: 'Solicitud de Cotizaciones' },
+      { id: '3', label: 'Comparativa Técnica' },
+      { id: '4', label: 'Aprobación de Gasto' },
+      { id: '5', label: 'Emisión PO' },
+      { id: '6', label: 'Seguimiento Logístico' },
+      { id: '7', label: 'Ingreso a Almacén' }
     ],
     links: [
       { source: '1', target: '2', weight: 450 },
@@ -89,13 +89,13 @@ export const EXAMPLE_DATASETS: Dataset[] = [
     name: '[RIESGOS] Análisis de Riesgo Crédito',
     description: 'Evaluación técnica de solvencia para clientes B2B.',
     nodes: [
-      { id: '1', label: 'Recepción de Carpeta', category: 'ENTRY' },
-      { id: '2', label: 'Análisis de Estados Contables', category: 'TECH' },
-      { id: '3', label: 'Consulta Buró Externo', category: 'TECH' },
-      { id: '4', label: 'Visita Técnica', category: 'FIELD' },
-      { id: '5', label: 'Dictamen de Riesgo', category: 'LEGAL' },
-      { id: '6', label: 'Comité de Crédito', category: 'EXEC' },
-      { id: '7', label: 'Formalización', category: 'LEGAL' }
+      { id: '1', label: 'Recepción de Carpeta' },
+      { id: '2', label: 'Análisis de Estados Contables' },
+      { id: '3', label: 'Consulta Buró Externo' },
+      { id: '4', label: 'Visita Técnica' },
+      { id: '5', label: 'Dictamen de Riesgo' },
+      { id: '6', label: 'Comité de Crédito' },
+      { id: '7', label: 'Formalización' }
     ],
     links: [
       { source: '1', target: '2', weight: 200 },
@@ -113,5 +113,65 @@ export const EXAMPLE_DATASETS: Dataset[] = [
     },
     wastes: HIGH_WASTE(10, 50, 95, 30, 15, 25, 5, 35),
     dora: { deploymentFrequency: 'Media', leadTime: '94 hrs', failureRate: '15%', timeToRestore: '72 hrs' }
+  },
+  {
+    id: 'manufacturing-flow',
+    name: '[FÁBRICA] Línea de Ensamble',
+    description: 'Monitoreo de tiempos en celda de manufactura robotizada.',
+    nodes: [
+      { id: '1', label: 'Ingreso Chasis' },
+      { id: '2', label: 'Soldadura Robot' },
+      { id: '3', label: 'Pintura Electroestática' },
+      { id: '4', label: 'Secado Térmico' },
+      { id: '5', label: 'Control Óptico' },
+      { id: '6', label: 'Embalaje Final' },
+      { id: '7', label: 'Despacho' }
+    ],
+    links: [
+      { source: '1', target: '2', weight: 1200 },
+      { source: '2', target: '3', weight: 1180 },
+      { source: '3', target: '4', weight: 1150 },
+      { source: '4', target: '5', weight: 1140 },
+      { source: '5', target: '6', weight: 1130 },
+      { source: '6', target: '7', weight: 1125 }
+    ],
+    stats: { 
+      events: 8400, cases: 1200, activities: 7,
+      medianDuration: '45 min', meanDuration: '52 min',
+      start: '01.11.2025', end: '30.11.2025',
+      efficiency: 91, roi: '$240k/mo', throughput: '40 unidades/hr' 
+    },
+    wastes: LOW_WASTE(5, 10, 15, 5, 2, 5, 30, 5),
+    dora: { deploymentFrequency: 'Elite', leadTime: '0.8 hrs', failureRate: '0.5%', timeToRestore: '15 min' }
+  },
+  {
+    id: 'it-support-tickets',
+    name: '[IT] Resolución de Incidencias',
+    description: 'Flujo de soporte técnico N1 a N3 para servicios cloud.',
+    nodes: [
+      { id: '1', label: 'Ticket Creado' },
+      { id: '2', label: 'Clasificación N1' },
+      { id: '3', label: 'Escalamiento N2' },
+      { id: '4', label: 'Diagnóstico Técnico' },
+      { id: '5', label: 'Hotfix Aplicado' },
+      { id: '6', label: 'Validación Usuario' },
+      { id: '7', label: 'Cierre Ticket' }
+    ],
+    links: [
+      { source: '1', target: '2', weight: 500 },
+      { source: '2', target: '3', weight: 320 },
+      { source: '3', target: '4', weight: 310 },
+      { source: '4', target: '5', weight: 300 },
+      { source: '5', target: '6', weight: 295 },
+      { source: '6', target: '7', weight: 290 }
+    ],
+    stats: { 
+      events: 3500, cases: 500, activities: 7,
+      medianDuration: '1.2 días', meanDuration: '2.4 días',
+      start: '01.11.2025', end: '30.11.2025',
+      efficiency: 66, roi: '$48k/mo', throughput: '16 tickets/día' 
+    },
+    wastes: HIGH_WASTE(0, 15, 65, 20, 25, 10, 5, 20),
+    dora: { deploymentFrequency: 'Media', leadTime: '57.6 hrs', failureRate: '12%', timeToRestore: '8 hrs' }
   }
 ];
