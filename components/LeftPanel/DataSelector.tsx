@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { EXAMPLE_DATASETS } from '../../constants';
+import { DemoConfig } from '../../constants';
 import { Dataset } from '../../types';
 
 interface Props {
   dataSource: 'demo' | 'own';
   setDataSource: (source: 'demo' | 'own') => void;
-  selectedDataset: Dataset;
-  setSelectedDataset: (ds: Dataset) => void;
+  selectedDataset: DemoConfig;
+  setSelectedDataset: (ds: DemoConfig) => void;
   ownDataset: Dataset | null;
   showDemoMenu: boolean;
   setShowDemoMenu: (show: boolean) => void;
@@ -15,18 +15,19 @@ interface Props {
   setIsHoveringCSV: (hover: boolean) => void;
   csvInputRef: React.RefObject<HTMLInputElement | null>;
   handleCSVUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  demoConfigs: DemoConfig[];
 }
 
 const DataSelector: React.FC<Props> = ({
   dataSource, setDataSource, selectedDataset, setSelectedDataset,
   ownDataset, showDemoMenu, setShowDemoMenu, isHoveringCSV,
-  setIsHoveringCSV, csvInputRef, handleCSVUpload
+  setIsHoveringCSV, csvInputRef, handleCSVUpload, demoConfigs
 }) => {
   return (
-    <div className="shrink-0 flex flex-col gap-4 mb-6">
+    <div className="shrink-0 flex flex-col gap-4 mb-6" id="tour-data-selector">
       <div className="bg-slate-100 p-1 rounded-xl border border-slate-200 flex shadow-inner">
-        <button onClick={() => { setDataSource('demo'); setSelectedDataset(EXAMPLE_DATASETS[0]); }} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all ${dataSource === 'demo' ? 'bg-white text-[#5c56f1] shadow-sm' : 'text-slate-500'}`}>DEMO DATA</button>
-        <button onClick={() => { setDataSource('own'); if(ownDataset) setSelectedDataset(ownDataset); }} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all ${dataSource === 'own' ? 'bg-white text-[#5c56f1] shadow-sm' : 'text-slate-500'}`}>PROPIA</button>
+        <button onClick={() => { setDataSource('demo'); setSelectedDataset(demoConfigs[0]); }} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all ${dataSource === 'demo' ? 'bg-white text-[#5c56f1] shadow-sm' : 'text-slate-500'}`}>DEMO DATA</button>
+        <button onClick={() => { setDataSource('own'); }} className={`flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all ${dataSource === 'own' ? 'bg-white text-[#5c56f1] shadow-sm' : 'text-slate-500'}`}>PROPIA</button>
       </div>
 
       {dataSource === 'demo' ? (
@@ -34,7 +35,7 @@ const DataSelector: React.FC<Props> = ({
           {selectedDataset.name} <span className="text-[8px] text-slate-400">▼</span>
           {showDemoMenu && (
             <div className="absolute top-full left-0 w-full mt-2 bg-white border border-slate-200 rounded-xl p-2 z-[60] shadow-2xl animate-in slide-in-from-top-2">
-               {EXAMPLE_DATASETS.map(ds => (
+               {demoConfigs.map(ds => (
                  <button key={ds.id} onClick={() => { setSelectedDataset(ds); setShowDemoMenu(false); }} className={`w-full text-left px-4 py-2 rounded-lg text-[10px] font-bold transition ${selectedDataset.id === ds.id ? 'bg-slate-50 text-[#5c56f1]' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}>{ds.name}</button>
                ))}
             </div>

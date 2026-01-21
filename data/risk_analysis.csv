@@ -1,0 +1,12 @@
+Case ID,Activity,Timestamp
+R-99,Recepción de Carpeta,2025-11-01 14:00:00
+R-99,Análisis de Estados Contables,2025-11-02 09:00:00
+R-99,Consulta Buró Externo,2025-11-02 10:00:00
+R-99,Visita Técnica,2025-11-03 11:00:00
+R-99,Dictamen de Riesgo,2025-11-04 16:00:00
+R-99,Comité de Crédito,2025-11-05 10:00:00
+R-99,Formalización,2025-11-06 12:00:00
+R-100,Recepción de Carpeta,2025-11-01 15:00:00
+R-100,Análisis de Estados Contables,2025-11-02 10:00:00
+R-100,Consulta Buró Externo,2025-11-02 11:30:00
+R-101,Recepción de Carpeta,2025-11-02 09:00:00

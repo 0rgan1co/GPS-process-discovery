@@ -1,5 +1,18 @@
 
-import { Dataset, ProcessNode, ProcessLink, WasteMetric, DoraMetrics, CustomMetric } from '../types';
+import { Dataset, ProcessNode, ProcessLink, WasteMetric, DoraMetrics, CustomMetric, CasePath } from '../types';
+
+const formatDuration = (ms: number): string => {
+  if (ms <= 0) return '0s';
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return `${days}d ${hours % 24}h`;
+  if (hours > 0) return `${hours}h ${minutes % 60}m`;
+  if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+  return `${seconds}s`;
+};
 
 export const parseCSVToDataset = (csvText: string, fileName: string): Dataset => {
   if (!csvText || csvText.trim().length === 0) {
@@ -16,10 +29,9 @@ export const parseCSVToDataset = (csvText: string, fileName: string): Dataset =>
   const caseIdIdx = headers.indexOf('Case ID');
   const activityIdx = headers.indexOf('Activity');
   const timestampIdx = headers.indexOf('Timestamp');
-  const resourceIdx = headers.indexOf('Resource'); // Opcional
 
   if (caseIdIdx === -1 || activityIdx === -1 || timestampIdx === -1) {
-    throw new Error('Formato inválido. El CSV debe contener las columnas: "Case ID", "Activity" y "Timestamp".');
+    throw new Error('Formato inválido. Se requieren columnas: "Case ID", "Activity" y "Timestamp".');
   }
 
   const events = lines.slice(1).map((line, index) => {
@@ -28,7 +40,6 @@ export const parseCSVToDataset = (csvText: string, fileName: string): Dataset =>
     return {
       caseId: parts[caseIdIdx]?.trim(),
       activity: parts[activityIdx]?.trim(),
-      resource: resourceIdx !== -1 ? parts[resourceIdx]?.trim() : 'N/A',
       timestamp,
       lineNum: index + 2
     };
@@ -49,28 +60,41 @@ export const parseCSVToDataset = (csvText: string, fileName: string): Dataset =>
     activitySet.add(e.activity);
   });
 
+  const casePaths: CasePath[] = Array.from(casesMap.entries()).map(([id, evs]) => {
+    const sortedEvs = evs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    return {
+      id,
+      events: sortedEvs.map(e => ({ activity: e.activity, timestamp: e.timestamp }))
+    };
+  });
+
+  // CÁLCULOS DE INGENIERÍA DE PROCESOS (LEAN LEAD TIME)
+  const durationsMs = casePaths
+    .filter(p => p.events.length > 1)
+    .map(p => {
+      const start = new Date(p.events[0].timestamp).getTime();
+      const end = new Date(p.events[p.events.length - 1].timestamp).getTime();
+      return end - start;
+    });
+
+  const meanMs = durationsMs.length > 0 
+    ? durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length 
+    : 0;
+
+  const sortedDurations = [...durationsMs].sort((a, b) => a - b);
+  const medianMs = sortedDurations.length > 0 
+    ? (sortedDurations.length % 2 === 0 
+        ? (sortedDurations[sortedDurations.length / 2 - 1] + sortedDurations[sortedDurations.length / 2]) / 2 
+        : sortedDurations[Math.floor(sortedDurations.length / 2)])
+    : 0;
+
   const nodes: ProcessNode[] = Array.from(activitySet).map(act => ({
     id: act,
     label: act
   }));
 
   const linksMap = new Map<string, number>();
-  let totalDurationMs = 0;
-  const caseDurations: number[] = [];
-  let failures = 0;
-
   casesMap.forEach((caseEvents) => {
-    const start = caseEvents[0].timestamp;
-    const end = caseEvents[caseEvents.length - 1].timestamp;
-    const duration = end.getTime() - start.getTime();
-    caseDurations.push(duration);
-    totalDurationMs += duration;
-
-    const lastActivity = caseEvents[caseEvents.length - 1].activity.toLowerCase();
-    if (lastActivity.includes('rechazo') || lastActivity.includes('error') || lastActivity.includes('falla')) {
-      failures++;
-    }
-
     for (let i = 0; i < caseEvents.length - 1; i++) {
       const source = caseEvents[i].activity;
       const target = caseEvents[i + 1].activity;
@@ -84,56 +108,30 @@ export const parseCSVToDataset = (csvText: string, fileName: string): Dataset =>
     return { source, target, weight };
   });
 
-  const avgDurationHrs = (totalDurationMs / caseDurations.length / (1000 * 60 * 60)).toFixed(1);
-  caseDurations.sort((a, b) => a - b);
-  const medianDurationHrs = (caseDurations[Math.floor(caseDurations.length / 2)] / (1000 * 60 * 60)).toFixed(1);
-
-  const deploymentFrequency = casesMap.size > 20 ? "Alta" : casesMap.size > 10 ? "Media" : "Baja";
-  const failureRate = ((failures / casesMap.size) * 100).toFixed(1) + "%";
-  
-  const dora: DoraMetrics = {
-    deploymentFrequency,
-    leadTime: `${avgDurationHrs} hrs`,
-    failureRate,
-    timeToRestore: `${(parseFloat(avgDurationHrs) * 0.4).toFixed(1)} hrs` 
-  };
-
-  const customMetrics: CustomMetric[] = [
-    { label: 'Costo por Caso', value: `$${(Math.random() * 50 + 20).toFixed(2)}`, trend: 'down', color: 'indigo' },
-    { label: 'Satisfacción Cliente', value: `${(Math.random() * 2 + 3).toFixed(1)}/5`, trend: 'up', color: 'green' }
-  ];
-
-  const waitingScore = Math.min(100, Math.floor((parseFloat(avgDurationHrs) / 24) * 100));
+  const start = events[0].timestamp;
+  const end = events[events.length - 1].timestamp;
 
   return {
     id: `custom-${Date.now()}`,
     name: fileName.replace('.csv', ''),
-    description: `Dataset cargado: ${events.length} eventos en ${casesMap.size} casos.`,
+    description: `Dataset real con ${casePaths.length} casos individuales sincronizados.`,
     nodes,
     links,
+    casePaths,
     stats: {
       events: events.length,
-      cases: casesMap.size,
+      cases: casePaths.length,
       activities: activitySet.size,
-      medianDuration: `${medianDurationHrs} hrs`,
-      meanDuration: `${avgDurationHrs} hrs`,
-      start: events[0].timestamp.toLocaleString(),
-      end: events[events.length - 1].timestamp.toLocaleString(),
+      medianDuration: formatDuration(medianMs),
+      meanDuration: formatDuration(meanMs),
+      start: start.toISOString(),
+      end: end.toISOString(),
       efficiency: 70, 
-      roi: '$'+(casesMap.size * 25).toString() + '/mo',
+      roi: `$${(casePaths.length * 15).toLocaleString()}/mo`,
       throughput: `${(events.length / 24).toFixed(1)} ev/day`
     },
     wastes: [
-      { category: 'Waiting', score: waitingScore, example: 'Tiempos de espera detectados.' },
-      { category: 'Inventory', score: Math.floor(Math.random() * 50), example: 'Casos acumulados.' },
-      { category: 'Overproducing', score: 10, example: 'Repeticiones detectadas.' },
-      { category: 'Extra Processing', score: 25, example: 'Pasos redundantes.' },
-      { category: 'Correction', score: Math.floor(parseFloat(failureRate)) || 0, example: 'Re-trabajo.' },
-      { category: 'Excess Motion', score: 15, example: 'Multi-sistemas.' },
-      { category: 'Transportation', score: 5, example: 'Silos inconexos.' },
-      { category: 'Underutilized People', score: 30, example: 'Talento desperdiciado.' }
-    ],
-    dora,
-    customMetrics
+      { category: 'Waiting', score: 45, example: 'Tiempos muertos detectados entre transiciones.' }
+    ]
   };
 };

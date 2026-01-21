@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { EXAMPLE_DATASETS } from './constants';
+import { DEMO_CONFIGS, DemoConfig } from './constants';
 import { Dataset, ChatMessage } from './types';
 import ProcessGraph from './components/ProcessGraph';
 import { getAIResponse, generateExecutivePresentation } from './services/geminiService';
@@ -45,21 +45,15 @@ const App: React.FC = () => {
   const [mainNav, setMainNav] = useState<MainTab>('EXPLORAR');
   const [subTab, setSubTab] = useState<string>('Mapa de Flujo');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   
-  // FIX: Added missing toolTab state to manage Right Panel tabs
+  const [animationSpeed, setAnimationSpeed] = useState(1);
   const [toolTab, setToolTab] = useState<'report' | 'chat'>('report');
 
-  useEffect(() => {
-    if (currentView === 'app') {
-      const hasSeenOnboarding = localStorage.getItem('gps_onboarding_seen');
-      if (!hasSeenOnboarding) {
-        setTimeout(() => setShowOnboarding(true), 1500);
-      }
-    }
-  }, [currentView]);
-
   const [dataSource, setDataSource] = useState<'demo' | 'own'>('demo');
-  const [selectedDataset, setSelectedDataset] = useState<Dataset>(EXAMPLE_DATASETS[0]);
+  const [selectedDemoConfig, setSelectedDemoConfig] = useState<DemoConfig>(DEMO_CONFIGS[0]);
+  const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
   const [ownDataset, setOwnDataset] = useState<Dataset | null>(null);
   const [isHoveringCSV, setIsHoveringCSV] = useState(false);
   
@@ -84,7 +78,6 @@ const App: React.FC = () => {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [notification, setNotification] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
   
-  const deckRef = useRef<HTMLDivElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const contextScrollRef = useRef<HTMLDivElement>(null);
   const supportScrollRef = useRef<HTMLDivElement>(null);
@@ -95,10 +88,63 @@ const App: React.FC = () => {
   const audioContextRef = useRef<{ input: AudioContext; output: AudioContext } | null>(null);
   const nextStartTimeRef = useRef(0);
 
+  // Lógica de carga de Dataset con retraso de "Análisis IA"
+  const processDataset = async (csvText: string, name: string, config?: DemoConfig) => {
+    setIsAnalyzing(true);
+    // Tiempo random entre 3 y 7 segundos
+    const analysisTime = Math.floor(Math.random() * (7000 - 3000 + 1) + 3000);
+    
+    try {
+      const dataset = parseCSVToDataset(csvText, name);
+      if (config) {
+        dataset.wastes = config.wastes;
+        dataset.dora = config.dora;
+        dataset.stats = { ...dataset.stats, ...config.baseStats };
+      }
+      
+      // Esperar el tiempo de análisis antes de entregar los datos al gráfico
+      await new Promise(resolve => setTimeout(resolve, analysisTime));
+      setSelectedDataset(dataset);
+    } catch (err) {
+      console.error("Error processing dataset:", err);
+      setNotification({ msg: "Error al analizar datos", type: 'error' });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadDemo = async () => {
+      if (dataSource === 'demo' && selectedDemoConfig) {
+        setIsLoading(true);
+        try {
+          const response = await fetch(selectedDemoConfig.csvPath);
+          const csvText = await response.text();
+          await processDataset(csvText, selectedDemoConfig.name, selectedDemoConfig);
+        } catch (err) {
+          console.error("Error fetching demo:", err);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    loadDemo();
+  }, [selectedDemoConfig, dataSource]);
+
+  useEffect(() => {
+    if (currentView === 'app') {
+      const hasSeenOnboarding = localStorage.getItem('gps_onboarding_seen');
+      if (!hasSeenOnboarding) {
+        setTimeout(() => setShowOnboarding(true), 1500);
+      }
+    }
+  }, [currentView]);
+
   useEffect(() => { setSubTab(SUB_TABS[mainNav][0]); }, [mainNav]);
   useEffect(() => { if (notification) { const t = setTimeout(() => setNotification(null), 5000); return () => clearTimeout(t); } }, [notification]);
   
   const handleSendMessage = async (textOverride?: string) => {
+    if (!selectedDataset) return;
     const textToSend = textOverride || inputText;
     if (!textToSend.trim()) return;
     setChatHistory(prev => [...prev, { role: 'user', text: textToSend }]);
@@ -110,6 +156,7 @@ const App: React.FC = () => {
   };
 
   const handleSendContextMessage = async (textOverride?: string) => {
+    if (!selectedDataset) return;
     const textToSend = textOverride || contextInput;
     if (!textToSend.trim()) return;
     setContextChatHistory(prev => [...prev, { role: 'user', text: textToSend }]);
@@ -129,18 +176,21 @@ const App: React.FC = () => {
   const handleCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    setIsLoading(true);
     try {
       const text = await file.text();
-      const dataset = parseCSVToDataset(text, file.name);
-      setOwnDataset(dataset);
-      setSelectedDataset(dataset);
+      await processDataset(text, file.name);
+      setOwnDataset(selectedDataset);
       setNotification({ msg: "CSV Cargado con éxito", type: 'success' });
     } catch (err: any) {
       setNotification({ msg: "Error al procesar CSV", type: 'error' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleGenerateDeck = async () => {
+    if (!selectedDataset) return;
     if (!userEmail || !userEmail.includes('@')) {
       setShowEmailModal(true);
       return;
@@ -162,7 +212,6 @@ const App: React.FC = () => {
     const isActive = type === 'support' ? isLiveActive : isContextLiveActive;
     if (isActive) { stopLiveSession(); return; }
     try {
-      // Create a new GoogleGenAI instance right before making an API call to ensure it uses latest key
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const inputCtx = new AudioContext({ sampleRate: 16000 });
       const outputCtx = new AudioContext({ sampleRate: 24000 });
@@ -177,7 +226,6 @@ const App: React.FC = () => {
             const scriptProcessor = inputCtx.createScriptProcessor(4096, 1, 1);
             scriptProcessor.onaudioprocess = (e) => {
               const pcmBlob = createBlob(e.inputBuffer.getChannelData(0));
-              // Solely rely on sessionPromise resolves to send input to avoid race conditions
               sessionPromise.then(s => s.sendRealtimeInput({ media: pcmBlob }));
             };
             source.connect(scriptProcessor);
@@ -256,10 +304,11 @@ const App: React.FC = () => {
           <div className="flex-1 p-6 flex flex-col min-h-0">
             <DataSelector 
               dataSource={dataSource} setDataSource={setDataSource}
-              selectedDataset={selectedDataset} setSelectedDataset={setSelectedDataset}
+              selectedDataset={selectedDemoConfig as any} setSelectedDataset={(ds: any) => setSelectedDemoConfig(ds)}
               ownDataset={ownDataset} showDemoMenu={showDemoMenu} setShowDemoMenu={setShowDemoMenu}
               isHoveringCSV={isHoveringCSV} setIsHoveringCSV={setIsHoveringCSV}
               csvInputRef={csvInputRef} handleCSVUpload={handleCSVUpload}
+              demoConfigs={DEMO_CONFIGS}
             />
             <SmartContext 
               chatHistory={contextChatHistory} inputText={contextInput} setInputText={setContextInput}
@@ -272,7 +321,7 @@ const App: React.FC = () => {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#f8fafc]">
+      <main className="flex-1 flex flex-col min-0 bg-[#f8fafc]">
         <nav className="h-24 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-8 flex justify-between items-center z-30">
           <div className="flex gap-10">
             {MAIN_TABS.map(tab => (
@@ -292,10 +341,66 @@ const App: React.FC = () => {
         </nav>
 
         <div className="flex-1 p-8 overflow-hidden relative">
-          {mainNav === 'EXPLORAR' && subTab === 'Mapa de Flujo' && <ProcessGraph dataset={selectedDataset} animationSpeed={1} />}
-          {mainNav === 'EXPLORAR' && subTab === 'Estadísticas' && <Statistics dataset={selectedDataset} />}
-          {mainNav === 'EXPLORAR' && subTab === 'Colaboradores' && <Collaborators onNotify={(msg, type) => setNotification({ msg, type })} />}
-          {mainNav === 'MEJORAR' && subTab === 'Iniciativas' && <InitiativesDashboard dataset={selectedDataset} />}
+          {(isLoading || isAnalyzing) && subTab === 'Mapa de Flujo' ? (
+             <div className="absolute inset-0 bg-white/90 backdrop-blur-xl z-[100] flex items-center justify-center p-12">
+               <div className="w-full max-w-2xl bg-slate-900 rounded-[48px] p-12 border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden relative">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#5c56f1]/10 blur-[80px] rounded-full -mr-32 -mt-32"></div>
+                  <div className="relative z-10 space-y-8">
+                    <div className="flex justify-between items-center">
+                       <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 border-4 border-[#5c56f1] border-t-transparent rounded-full animate-spin"></div>
+                          <span className="text-[10px] font-black text-white uppercase tracking-[0.5em]">AI Core Engine Running</span>
+                       </div>
+                       <span className="text-[10px] font-black text-[#5c56f1] animate-pulse">ESTADO: ANALIZANDO TRAZAS</span>
+                    </div>
+
+                    <div className="h-px bg-white/10 w-full"></div>
+
+                    <div className="space-y-4 font-mono text-[9px] text-white/40 uppercase tracking-widest overflow-hidden h-32">
+                       <p className="animate-in slide-in-from-bottom-2 duration-300">>> Extrayendo eventos desde registro digital...</p>
+                       <p className="animate-in slide-in-from-bottom-2 duration-300 delay-75">>> Identificando variantes de proceso: {Math.floor(Math.random()*15)+5} detectadas</p>
+                       <p className="animate-in slide-in-from-bottom-2 duration-300 delay-150">>> Calculando medianas de transición (Lead Time)...</p>
+                       <p className="animate-in slide-in-from-bottom-2 duration-300 delay-200">>> Mapeando dependencias críticas N1 a N3...</p>
+                       <p className="animate-in slide-in-from-bottom-2 duration-300 delay-300 text-[#5c56f1]">>> Sincronizando gemelo digital del flujo operacional...</p>
+                    </div>
+
+                    <div className="flex justify-between items-end">
+                       <div className="space-y-1">
+                          <p className="text-[8px] font-black text-white/20 uppercase tracking-widest">Dataset origen</p>
+                          <p className="text-[11px] font-black text-white italic">{selectedDemoConfig?.name || 'CSV Externo'}</p>
+                       </div>
+                       <div className="text-right">
+                          <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mt-2">Generando Visualización...</p>
+                       </div>
+                    </div>
+                  </div>
+               </div>
+             </div>
+          ) : null}
+
+          {selectedDataset ? (
+            <>
+              {mainNav === 'EXPLORAR' && subTab === 'Mapa de Flujo' && (
+                <ProcessGraph 
+                  dataset={selectedDataset} 
+                  animationSpeed={animationSpeed} 
+                  setAnimationSpeed={setAnimationSpeed} 
+                />
+              )}
+              {mainNav === 'EXPLORAR' && subTab === 'Estadísticas' && <Statistics dataset={selectedDataset} />}
+              {mainNav === 'EXPLORAR' && subTab === 'Colaboradores' && <Collaborators onNotify={(msg, type) => setNotification({ msg, type })} />}
+              {mainNav === 'MEJORAR' && subTab === 'Iniciativas' && <InitiativesDashboard dataset={selectedDataset} />}
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center space-y-6">
+                <div className="w-20 h-20 bg-white border border-slate-200 rounded-[32px] flex items-center justify-center mx-auto shadow-xl">
+                   <span className="text-4xl grayscale opacity-30">🗺️</span>
+                </div>
+                <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.4em]">Selecciona un proceso para comenzar el descubrimiento</p>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

@@ -1,0 +1,154 @@
+Case ID,Activity,Timestamp
+SKU-10054 - Logística del Norte,Detección de Necesidad,2025-11-01 09:36:00
+SKU-10015 - Soluciones Energéticas,Detección de Necesidad,2025-11-01 11:33:00
+SKU-10121 - Soluciones Energéticas,Detección de Necesidad,2025-11-01 11:59:00
+SKU-10015 - Soluciones Energéticas,Solicitud de Cotizaciones,2025-11-01 12:33:00
+SKU-10054 - Logística del Norte,Solicitud de Cotizaciones,2025-11-01 13:36:00
+SKU-10121 - Soluciones Energéticas,Solicitud de Cotizaciones,2025-11-01 13:59:00
+SKU-10082 - Servicios de Limpieza Integral,Detección de Necesidad,2025-11-01 14:31:00
+SKU-10129 - Química del Sur,Detección de Necesidad,2025-11-01 16:38:00
+SKU-10082 - Servicios de Limpieza Integral,Solicitud de Cotizaciones,2025-11-01 17:31:00
+SKU-10030 - Equipos Médicos S.A.,Detección de Necesidad,2025-11-01 20:26:00
+SKU-10129 - Química del Sur,Solicitud de Cotizaciones,2025-11-01 20:38:00
+SKU-10030 - Equipos Médicos S.A.,Solicitud de Cotizaciones,2025-11-01 22:26:00
+SKU-10015 - Soluciones Energéticas,Comparativa Técnica,2025-11-02 12:33:00
+SKU-10015 - Soluciones Energéticas,Negociación de precio,2025-11-02 19:33:00
+SKU-10025 - Metalúrgica Central,Detección de Necesidad,2025-11-02 20:57:00
+SKU-10025 - Metalúrgica Central,Solicitud de Cotizaciones,2025-11-02 21:57:00
+SKU-10121 - Soluciones Energéticas,Comparativa Técnica,2025-11-03 13:59:00
+SKU-10082 - Servicios de Limpieza Integral,Comparativa Técnica,2025-11-03 17:31:00
+SKU-10129 - Química del Sur,Comparativa Técnica,2025-11-03 20:38:00
+SKU-10082 - Servicios de Limpieza Integral,Falta de Información,2025-11-03 22:31:00
+SKU-10129 - Química del Sur,Negociación de precio,2025-11-03 22:38:00
+SKU-10030 - Equipos Médicos S.A.,Comparativa Técnica,2025-11-03 22:26:00
+SKU-10054 - Logística del Norte,Comparativa Técnica,2025-11-04 13:36:00
+SKU-10025 - Metalúrgica Central,Comparativa Técnica,2025-11-04 21:57:00
+SKU-10030 - Equipos Médicos S.A.,Aprobación de Gasto,2025-11-05 22:26:00
+SKU-10082 - Servicios de Limpieza Integral,Solicitud de Cotizaciones,2025-11-05 22:31:00
+SKU-10015 - Soluciones Energéticas,Solicitud de Cotizaciones,2025-11-06 19:33:00
+SKU-10129 - Química del Sur,Solicitud de Cotizaciones,2025-11-07 22:38:00
+SKU-10015 - Soluciones Energéticas,Comparativa Técnica,2025-11-08 19:33:00
+SKU-10082 - Servicios de Limpieza Integral,Comparativa Técnica,2025-11-08 22:31:00
+SKU-10129 - Química del Sur,Comparativa Técnica,2025-11-09 22:38:00
+SKU-10030 - Equipos Médicos S.A.,Emisión PO,2025-11-06 01:26:00
+SKU-10030 - Equipos Médicos S.A.,Seguimiento Logístico,2025-11-07 01:26:00
+SKU-10121 - Soluciones Energéticas,Aprobación de Gasto,2025-11-07 13:59:00
+SKU-10025 - Metalúrgica Central,Aprobación de Gasto,2025-11-08 21:57:00
+SKU-10121 - Soluciones Energéticas,Emisión PO,2025-11-07 18:59:00
+SKU-10025 - Metalúrgica Central,Emisión PO,2025-11-09 02:57:00
+SKU-10121 - Soluciones Energéticas,Seguimiento Logístico,2025-11-08 18:59:00
+SKU-10025 - Metalúrgica Central,Seguimiento Logístico,2025-11-10 02:57:00
+SKU-10015 - Soluciones Energéticas,Aprobación de Gasto,2025-11-12 19:33:00
+SKU-10082 - Servicios de Limpieza Integral,Aprobación de Gasto,2025-11-12 22:31:00
+SKU-10129 - Química del Sur,Aprobación de Gasto,2025-11-13 22:38:00
+SKU-10121 - Soluciones Energéticas,Ingreso a Almacén,2025-11-14 18:59:00
+SKU-10030 - Equipos Médicos S.A.,Ingreso a Almacén,2025-11-15 01:26:00
+SKU-10025 - Metalúrgica Central,Ingreso a Almacén,2025-11-16 02:57:00
+SKU-10054 - Logística del Norte,Aprobación de Gasto,2025-11-08 13:36:00
+SKU-10054 - Logística del Norte,Emisión PO,2025-11-08 18:36:00
+SKU-10054 - Logística del Norte,Seguimiento Logístico,2025-11-09 18:36:00
+SKU-10054 - Logística del Norte,Ingreso a Almacén,2025-11-15 18:36:00
+SKU-10042 - Metalúrgica Central,Detección de Necesidad,2025-11-04 10:15:00
+SKU-10042 - Metalúrgica Central,Solicitud de Cotizaciones,2025-11-04 13:15:00
+SKU-10091 - Industrias Globales S.A.,Detección de Necesidad,2025-11-05 08:22:00
+SKU-10091 - Industrias Globales S.A.,Solicitud de Cotizaciones,2025-11-05 10:22:00
+SKU-10042 - Metalúrgica Central,Comparativa Técnica,2025-11-06 13:15:00
+SKU-10091 - Industrias Globales S.A.,Comparativa Técnica,2025-11-07 10:22:00
+SKU-10042 - Metalúrgica Central,Aprobación de Gasto,2025-11-09 13:15:00
+SKU-10091 - Industrias Globales S.A.,Aprobación de Gasto,2025-11-10 10:22:00
+SKU-10042 - Metalúrgica Central,Emisión PO,2025-11-09 16:15:00
+SKU-10091 - Industrias Globales S.A.,Emisión PO,2025-11-10 14:22:00
+SKU-10042 - Metalúrgica Central,Ingreso a Almacén,2025-11-15 16:15:00
+SKU-10091 - Industrias Globales S.A.,Seguimiento Logístico,2025-11-11 14:22:00
+SKU-10091 - Industrias Globales S.A.,Ingreso a Almacén,2025-11-18 14:22:00
+SKU-10115 - Tecnología Avanzada S.L.,Detección de Necesidad,2025-11-07 12:40:00
+SKU-10115 - Tecnología Avanzada S.L.,Solicitud de Cotizaciones,2025-11-07 15:40:00
+SKU-10115 - Tecnología Avanzada S.L.,Comparativa Técnica,2025-11-09 15:40:00
+SKU-10115 - Tecnología Avanzada S.L.,Negociación de precio,2025-11-09 18:40:00
+SKU-10115 - Tecnología Avanzada S.L.,Solicitud de Cotizaciones,2025-11-13 18:40:00
+SKU-10115 - Tecnología Avanzada S.L.,Comparativa Técnica,2025-11-15 18:40:00
+SKU-10115 - Tecnología Avanzada S.L.,Aprobación de Gasto,2025-11-18 18:40:00
+SKU-10115 - Tecnología Avanzada S.L.,Emisión PO,2025-11-18 22:40:00
+SKU-10115 - Tecnología Avanzada S.L.,Seguimiento Logístico,2025-11-19 22:40:00
+SKU-10115 - Tecnología Avanzada S.L.,Ingreso a Almacén,2025-11-26 22:40:00
+SKU-10022 - Papelera del Este,Detección de Necesidad,2025-11-08 09:10:00
+SKU-10022 - Papelera del Este,Solicitud de Cotizaciones,2025-11-08 11:10:00
+SKU-10022 - Papelera del Este,Comparativa Técnica,2025-11-10 11:10:00
+SKU-10022 - Papelera del Este,Falta de Información,2025-11-10 15:10:00
+SKU-10022 - Papelera del Este,Solicitud de Cotizaciones,2025-11-12 15:10:00
+SKU-10078 - Alimentos y Bebidas Corp.,Detección de Necesidad,2025-11-10 14:55:00
+SKU-10078 - Alimentos y Bebidas Corp.,Solicitud de Cotizaciones,2025-11-10 17:55:00
+SKU-10078 - Alimentos y Bebidas Corp.,Comparativa Técnica,2025-11-12 17:55:00
+SKU-10078 - Alimentos y Bebidas Corp.,Aprobación de Gasto,2025-11-15 17:55:00
+SKU-10078 - Alimentos y Bebidas Corp.,Gasto Rechazado,2025-11-15 20:55:00
+SKU-10145 - Metalúrgica Central,Detección de Necesidad,2025-11-12 11:20:00
+SKU-10145 - Metalúrgica Central,Solicitud de Cotizaciones,2025-11-12 14:20:00
+SKU-10145 - Metalúrgica Central,Comparativa Técnica,2025-11-14 14:20:00
+SKU-10145 - Metalúrgica Central,Aprobación de Gasto,2025-11-17 14:20:00
+SKU-10145 - Metalúrgica Central,Emisión PO,2025-11-17 18:20:00
+SKU-10145 - Metalúrgica Central,Seguimiento Logístico,2025-11-18 18:20:00
+SKU-10145 - Metalúrgica Central,Ingreso a Almacén,2025-11-25 18:20:00
+SKU-10063 - Química del Sur,Detección de Necesidad,2025-11-14 08:30:00
+SKU-10063 - Química del Sur,Solicitud de Cotizaciones,2025-11-14 10:30:00
+SKU-10063 - Química del Sur,Comparativa Técnica,2025-11-16 10:30:00
+SKU-10063 - Química del Sur,Aprobación de Gasto,2025-11-19 10:30:00
+SKU-10063 - Química del Sur,Emisión PO,2025-11-19 14:30:00
+SKU-10063 - Química del Sur,Seguimiento Logístico,2025-11-20 14:30:00
+SKU-10063 - Química del Sur,Ingreso a Almacén,2025-11-27 14:30:00
+SKU-10089 - Distribuidora de Insumos,Detección de Necesidad,2025-11-15 16:45:00
+SKU-10089 - Distribuidora de Insumos,Solicitud de Cotizaciones,2025-11-15 19:45:00
+SKU-10089 - Distribuidora de Insumos,Comparativa Técnica,2025-11-17 19:45:00
+SKU-10089 - Distribuidora de Insumos,Aprobación de Gasto,2025-11-20 19:45:00
+SKU-10089 - Distribuidora de Insumos,Emisión PO,2025-11-20 23:45:00
+SKU-10089 - Distribuidora de Insumos,Seguimiento Logístico,2025-11-21 23:45:00
+SKU-10089 - Distribuidora de Insumos,Ingreso a Almacén,2025-11-28 23:45:00
+SKU-10112 - Papelera del Este,Detección de Necesidad,2025-11-18 10:10:00
+SKU-10112 - Papelera del Este,Solicitud de Cotizaciones,2025-11-18 13:10:00
+SKU-10112 - Papelera del Este,Comparativa Técnica,2025-11-20 13:10:00
+SKU-10112 - Papelera del Este,Negociación de precio,2025-11-20 16:10:00
+SKU-10112 - Papelera del Este,Solicitud de Cotizaciones,2025-11-24 16:10:00
+SKU-10112 - Papelera del Este,Comparativa Técnica,2025-11-26 16:10:00
+SKU-10112 - Papelera del Este,Aprobación de Gasto,2025-11-29 16:10:00
+SKU-10112 - Papelera del Este,Emisión PO,2025-11-29 20:10:00
+SKU-10112 - Papelera del Este,Ingreso a Almacén,2025-12-05 20:10:00
+SKU-10034 - Consultoría de Infraestructura,Detección de Necesidad,2025-11-20 09:00:00
+SKU-10034 - Consultoría de Infraestructura,Solicitud de Cotizaciones,2025-11-20 11:00:00
+SKU-10034 - Consultoría de Infraestructura,Comparativa Técnica,2025-11-22 11:00:00
+SKU-10034 - Consultoría de Infraestructura,Aprobación de Gasto,2025-11-25 11:00:00
+SKU-10034 - Consultoría de Infraestructura,Emisión PO,2025-11-25 15:00:00
+SKU-10034 - Consultoría de Infraestructura,Ingreso a Almacén,2025-12-02 15:00:00
+SKU-10105 - Metalúrgica Central,Detección de Necesidad,2025-11-22 14:30:00
+SKU-10105 - Metalúrgica Central,Solicitud de Cotizaciones,2025-11-22 17:30:00
+SKU-10105 - Metalúrgica Central,Comparativa Técnica,2025-11-24 17:30:00
+SKU-10105 - Metalúrgica Central,Aprobación de Gasto,2025-11-27 17:30:00
+SKU-10105 - Metalúrgica Central,Emisión PO,2025-11-27 21:30:00
+SKU-10105 - Metalúrgica Central,Seguimiento Logístico,2025-11-28 21:30:00
+SKU-10105 - Metalúrgica Central,Ingreso a Almacén,2025-12-05 21:30:00
+SKU-10098 - Alimentos y Bebidas Corp.,Detección de Necesidad,2025-11-25 11:20:00
+SKU-10098 - Alimentos y Bebidas Corp.,Solicitud de Cotizaciones,2025-11-25 14:20:00
+SKU-10098 - Alimentos y Bebidas Corp.,Comparativa Técnica,2025-11-27 14:20:00
+SKU-10098 - Alimentos y Bebidas Corp.,Falta de Información,2025-11-27 18:20:00
+SKU-10098 - Alimentos y Bebidas Corp.,Solicitud de Cotizaciones,2025-11-29 18:20:00
+SKU-10098 - Alimentos y Bebidas Corp.,Comparativa Técnica,2025-12-02 18:20:00
+SKU-10098 - Alimentos y Bebidas Corp.,Aprobación de Gasto,2025-12-05 18:20:00
+SKU-10098 - Alimentos y Bebidas Corp.,Emisión PO,2025-12-05 22:20:00
+SKU-10098 - Alimentos y Bebidas Corp.,Seguimiento Logístico,2025-12-06 22:20:00
+SKU-10098 - Alimentos y Bebidas Corp.,Ingreso a Almacén,2025-12-13 22:20:00
+SKU-10138 - Soluciones Energéticas,Detección de Necesidad,2025-11-28 08:45:00
+SKU-10138 - Soluciones Energéticas,Solicitud de Cotizaciones,2025-11-28 11:45:00
+SKU-10138 - Soluciones Energéticas,Comparativa Técnica,2025-11-30 11:45:00
+SKU-10138 - Soluciones Energéticas,Aprobación de Gasto,2025-12-03 11:45:00
+SKU-10138 - Soluciones Energéticas,Gasto Rechazado,2025-12-03 14:45:00
+SKU-10012 - Construcciones y Proyectos,Detección de Necesidad,2025-12-01 10:00:00
+SKU-10012 - Construcciones y Proyectos,Solicitud de Cotizaciones,2025-12-01 13:00:00
+SKU-10012 - Construcciones y Proyectos,Comparativa Técnica,2025-12-03 13:00:00
+SKU-10012 - Construcciones y Proyectos,Aprobación de Gasto,2025-12-06 13:00:00
+SKU-10012 - Construcciones y Proyectos,Emisión PO,2025-12-06 17:00:00
+SKU-10012 - Construcciones y Proyectos,Seguimiento Logístico,2025-12-07 17:00:00
+SKU-10012 - Construcciones y Proyectos,Ingreso a Almacén,2025-12-14 17:00:00
+SKU-10149 - Suministros Industriales S.A.,Detección de Necesidad,2025-12-05 09:15:00
+SKU-10149 - Suministros Industriales S.A.,Solicitud de Cotizaciones,2025-12-05 12:15:00
+SKU-10149 - Suministros Industriales S.A.,Comparativa Técnica,2025-12-07 12:15:00
+SKU-10149 - Suministros Industriales S.A.,Aprobación de Gasto,2025-12-10 12:15:00
+SKU-10149 - Suministros Industriales S.A.,Emisión PO,2025-12-10 16:15:00
+SKU-10149 - Suministros Industriales S.A.,Ingreso a Almacén,2025-12-18 16:15:00

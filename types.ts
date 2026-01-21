@@ -47,12 +47,23 @@ export interface Initiative {
   estimatedRoi: string;
 }
 
+export interface CaseEvent {
+  activity: string;
+  timestamp: Date;
+}
+
+export interface CasePath {
+  id: string;
+  events: CaseEvent[];
+}
+
 export interface Dataset {
   id: string;
   name: string;
   description: string;
   nodes: ProcessNode[];
   links: ProcessLink[];
+  casePaths?: CasePath[];
   stats: {
     events: number;
     cases: number;

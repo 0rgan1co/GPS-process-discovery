@@ -1,0 +1,11 @@
+Case ID,Activity,Timestamp
+TKT-500,Ticket Creado,2025-11-01 10:00:00
+TKT-500,Clasificación N1,2025-11-01 10:30:00
+TKT-500,Escalamiento N2,2025-11-01 14:00:00
+TKT-500,Diagnóstico Técnico,2025-11-02 09:00:00
+TKT-500,Hotfix Aplicado,2025-11-02 11:00:00
+TKT-500,Validación Usuario,2025-11-02 15:00:00
+TKT-500,Cierre Ticket,2025-11-02 16:00:00
+TKT-501,Ticket Creado,2025-11-01 11:00:00
+TKT-501,Clasificación N1,2025-11-01 12:00:00
+TKT-502,Ticket Creado,2025-11-01 12:30:00

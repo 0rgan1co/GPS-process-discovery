@@ -1,0 +1,13 @@
+Case ID,Activity,Timestamp
+MFG-1,Ingreso Chasis,2025-11-01 08:00:00
+MFG-1,Soldadura Robot,2025-11-01 08:05:00
+MFG-1,Pintura Electroestática,2025-11-01 08:15:00
+MFG-1,Secado Térmico,2025-11-01 08:30:00
+MFG-1,Control Óptico,2025-11-01 08:40:00
+MFG-1,Embalaje Final,2025-11-01 08:45:00
+MFG-1,Despacho,2025-11-01 08:50:00
+MFG-2,Ingreso Chasis,2025-11-01 08:10:00
+MFG-2,Soldadura Robot,2025-11-01 08:15:00
+MFG-2,Pintura Electroestática,2025-11-01 08:25:00
+MFG-2,Secado Térmico,2025-11-01 08:40:00
+MFG-3,Ingreso Chasis,2025-11-01 08:20:00
