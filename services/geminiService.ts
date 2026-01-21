@@ -2,7 +2,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Dataset } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+// Always use process.env.API_KEY directly in the initialization object.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const getAIResponse = async (prompt: string, dataset: Dataset, history: any[], businessContext: string = "") => {
   const model = 'gemini-3-flash-preview'; 
@@ -15,23 +16,22 @@ export const getAIResponse = async (prompt: string, dataset: Dataset, history: a
   contents.push({ role: 'user', parts: [{ text: prompt }] });
 
   const systemInstruction = `
-    Eres "GPS Soporte IA", un asistente especializado en ayudar a los usuarios a utilizar la herramienta GPS Process Discovery.
-    Tu objetivo no es solo analizar datos, sino guiar al usuario en el uso de la plataforma.
+    Eres un experto en propuestas de negocio y mejora de procesos con enfoque Lean y experto en marketing.
+    Tu función es actuar como el motor analítico de GPS Process Discovery.
     
-    FUNCIONES PRINCIPALES:
-    1. Explicar cómo cargar datos (CSV).
-    2. Explicar las visualizaciones (Mapa de Flujo, grosores de flecha, colores de nodos).
-    3. Ayudar a configurar el "Smart Context" para mejores resultados.
-    4. Guiar en la generación de reportes ejecutivos.
-    
-    CONTEXTO DEL PROCESO ACTUAL:
-    - Proceso: "${dataset.name}"
-    - Smart Context del usuario: "${businessContext || 'No definido'}"
+    DIRECTRICES DE COMUNICACIÓN:
+    1. Información Factual: Usa exclusivamente datos del dataset y contexto proporcionado.
+    2. Tono Formal y Estructurado: Emplea un lenguaje técnico, preciso y profesional.
+    3. Comportamientos Observables: En lugar de usar adjetivos subjetivos, describe acciones y resultados medibles (ej. "el proceso se detiene en X" en lugar de "el proceso es lento").
+    4. Sin Creatividad No Solicitada: No inventes datos ni propongas escenarios hipotéticos fuera del análisis de procesos.
+    5. Terminología Lean: Aplica conceptos como Desperdicio (Muda), Valor Agregado, Lead Time y Cuellos de Botella de forma técnica.
 
-    REGLAS:
-    - Sé amable, pedagógico y directo.
-    - Si el usuario pregunta algo técnico sobre el proceso, responde integrando cómo la herramienta lo visualiza.
-    - Fomenta el uso de Smart Context para dar mejores insights.
+    CONTEXTO OPERATIVO:
+    - Proceso Analizado: "${dataset.name}"
+    - Contexto de Negocio (Smart Context): "${businessContext || 'No definido'}"
+    - Datos Estadísticos: Eficiencia ${dataset.stats.efficiency}%, Casos: ${dataset.stats.cases}, Duración Media: ${dataset.stats.meanDuration}.
+
+    REGLA DE ORO: Evita el uso excesivo de adjetivos. Prioriza la estructura: Dato -> Impacto Observado -> Acción Recomendada.
   `;
 
   try {
@@ -40,14 +40,14 @@ export const getAIResponse = async (prompt: string, dataset: Dataset, history: a
       contents,
       config: {
         systemInstruction,
-        temperature: 0.7,
+        temperature: 0.2, // Reducida para asegurar consistencia factual
       },
     });
 
-    return response.text || "No pude generar una respuesta de soporte.";
+    return response.text || "Error: No se pudo generar una respuesta basada en datos.";
   } catch (error) {
     console.error("Gemini Support Error:", error);
-    return "Error de conexión con el motor de soporte IA.";
+    return "Error de conexión con el motor analítico.";
   }
 };
 
@@ -55,26 +55,32 @@ export const generateExecutivePresentation = async (dataset: Dataset, customInst
   const model = 'gemini-3-pro-preview';
   
   const basePrompt = `
-    Como consultor experto, genera un DECK EJECUTIVO de exactamente 5 slides para el proceso "${dataset.name}" usando el template: "${template}".
+    Como consultor experto en Lean y Marketing Estratégico, genera un reporte ejecutivo estructurado de 5 slides para el proceso "${dataset.name}".
     
-    DATOS CLAVE DEL PROCESO:
+    RESTRICCIONES DE ESTILO:
+    - Solo información factual.
+    - Sin adjetivos excesivos.
+    - Foco en comportamientos observables y métricas.
+    - Tono formal y estructurado.
+
+    DATOS DEL DATASET:
     - Eficiencia: ${dataset.stats.efficiency}%
-    - Casos analizados: ${dataset.stats.cases}
+    - Casos: ${dataset.stats.cases}
     - Lead Time: ${dataset.stats.meanDuration}
-    - ROI Potencial: ${dataset.stats.roi}
-    - Mayores desperdicios: ${dataset.wastes.sort((a,b) => b.score - a.score).slice(0,3).map(w => w.category).join(', ')}
+    - ROI: ${dataset.stats.roi}
+    - Desperdicios identificados: ${dataset.wastes.sort((a,b) => b.score - a.score).slice(0,3).map(w => w.category).join(', ')}
 
-    ESTRUCTURA SEGÚN TEMPLATE "${template}":
-    Slide 1: Título y Visión General.
-    Slide 2: Diagnóstico de Eficiencia (Estado Actual).
-    Slide 3: Análisis de Cuellos de Botella e Impacto Financiero.
-    Slide 4: Plan de Acción y Recomendaciones Lean.
-    Slide 5: Proyección de Resultados y ROI.
+    ESTRUCTURA TÉCNICA REQUERIDA:
+    Slide 1: Título del Proyecto y Resumen de Métricas Base.
+    Slide 2: Estado Actual: Identificación de Desperdicios (Muda) Observados.
+    Slide 3: Cuellos de Botella: Impacto en el Lead Time y Eficiencia.
+    Slide 4: Estrategia de Mejora: Acciones Lean Específicas.
+    Slide 5: Proyección Factual de ROI y Plan de Seguimiento.
 
-    ${customInstructions ? `INSTRUCCIONES ESPECIALES DEL USUARIO: "${customInstructions}"` : ""}
+    ${customInstructions ? `INSTRUCCIONES ADICIONALES: "${customInstructions}"` : ""}
 
-    Responde ESTRICTAMENTE en formato JSON con esta estructura:
-    { "slides": [{ "title": "Título del Slide", "content": ["Punto clave 1", "Punto clave 2", "Punto clave 3"] }] }
+    Responde ESTRICTAMENTE en formato JSON:
+    { "slides": [{ "title": "Título Factual", "content": ["Punto técnico 1", "Punto técnico 2", "Punto técnico 3"] }] }
   `;
 
   try {
@@ -83,7 +89,7 @@ export const generateExecutivePresentation = async (dataset: Dataset, customInst
       contents: [{ role: 'user', parts: [{ text: basePrompt }] }],
       config: { 
         responseMimeType: "application/json", 
-        temperature: 0.4 
+        temperature: 0.1 // Mínima aleatoriedad para máxima precisión factual
       },
     });
     
@@ -94,8 +100,8 @@ export const generateExecutivePresentation = async (dataset: Dataset, customInst
     console.error("Error generating deck:", error);
     return { 
       slides: [{ 
-        title: "Error de Generación", 
-        content: ["Hubo un problema conectando con el motor de IA.", "Por favor, intenta nuevamente."] 
+        title: "Error de Análisis", 
+        content: ["El motor analítico no pudo procesar los datos actuales.", "Verifique la integridad del dataset."] 
       }] 
     };
   }

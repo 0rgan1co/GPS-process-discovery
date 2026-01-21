@@ -40,9 +40,11 @@ export interface Initiative {
   impact: 'low' | 'medium' | 'high';
   owner: string;
   startDate: string;
+  cycleDay: number; // Día actual del ciclo de 90
   achievements: string[];
   obstacles: string[];
   learnings: string[];
+  estimatedRoi: string;
 }
 
 export interface Dataset {
