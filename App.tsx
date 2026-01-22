@@ -82,6 +82,14 @@ const App: React.FC = () => {
   const audioContextRef = useRef<{ input: AudioContext; output: AudioContext } | null>(null);
   const nextStartTimeRef = useRef(0);
 
+  // Auto-clear notification
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
   // DETECTAR URL PARA MODO QA O FACTURACION
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -92,10 +100,12 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Lógica de carga de Dataset
-  const processDataset = async (csvText: string, name: string, config?: DemoConfig) => {
+  /**
+   * Procesa el texto CSV y lo convierte en Dataset
+   * Retorna el dataset para evitar problemas de sincronización de estado
+   */
+  const processDataset = async (csvText: string, name: string, config?: DemoConfig): Promise<Dataset | null> => {
     setIsAnalyzing(true);
-    const analysisTime = Math.floor(Math.random() * (4000) + 2000);
     try {
       const dataset = parseCSVToDataset(csvText, name);
       if (config) {
@@ -103,11 +113,13 @@ const App: React.FC = () => {
         dataset.dora = config.dora;
         dataset.stats = { ...dataset.stats, ...config.baseStats };
       }
-      await new Promise(resolve => setTimeout(resolve, analysisTime));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       setSelectedDataset(dataset);
-    } catch (err) {
-      console.error("Error processing dataset:", err);
-      setNotification({ msg: "Error al analizar datos", type: 'error' });
+      return dataset;
+    } catch (err: any) {
+      console.error("Critical Analysis Error:", err);
+      setNotification({ msg: err.message || "Error al analizar datos", type: 'error' });
+      return null;
     } finally {
       setIsAnalyzing(false);
     }
@@ -119,10 +131,12 @@ const App: React.FC = () => {
         setIsLoading(true);
         try {
           const response = await fetch(selectedDemoConfig.csvPath);
+          if (!response.ok) throw new Error(`El archivo de demo no está disponible (${response.status})`);
           const csvText = await response.text();
           await processDataset(csvText, selectedDemoConfig.name, selectedDemoConfig);
-        } catch (err) {
-          console.error("Error fetching demo:", err);
+        } catch (err: any) {
+          console.error("Demo Fetch Error:", err);
+          setNotification({ msg: err.message, type: 'error' });
         } finally {
           setIsLoading(false);
         }
@@ -173,13 +187,16 @@ const App: React.FC = () => {
     setIsLoading(true);
     try {
       const text = await file.text();
-      await processDataset(text, file.name);
-      setOwnDataset(selectedDataset);
-      setNotification({ msg: "CSV Cargado con éxito", type: 'success' });
+      const dataset = await processDataset(text, file.name);
+      if (dataset) {
+        setOwnDataset(dataset);
+        setNotification({ msg: "CSV Procesado correctamente", type: 'success' });
+      }
     } catch (err: any) {
-      setNotification({ msg: "Error al procesar CSV", type: 'error' });
+      setNotification({ msg: err.message || "Error al procesar el archivo local", type: 'error' });
     } finally {
       setIsLoading(false);
+      if (csvInputRef.current) csvInputRef.current.value = "";
     }
   };
 
@@ -248,6 +265,19 @@ const App: React.FC = () => {
     <div className="flex h-screen bg-[#f8fafc] text-[#0f172a] font-sans overflow-hidden">
       {showOnboarding && <Onboarding onClose={() => setShowOnboarding(false)} />}
       
+      {/* NOTIFICATION BANNER */}
+      {notification && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top-4 duration-300">
+          <div className={`px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 border ${
+            notification.type === 'success' ? 'bg-emerald-500 text-white border-emerald-400' : 'bg-rose-500 text-white border-rose-400'
+          }`}>
+            <span className="text-lg font-black">{notification.type === 'success' ? '✓' : '⚠'}</span>
+            <p className="text-xs font-black uppercase tracking-widest">{notification.msg}</p>
+            <button onClick={() => setNotification(null)} className="ml-4 opacity-50 hover:opacity-100 font-bold">✕</button>
+          </div>
+        </div>
+      )}
+
       {/* LEFT PANEL */}
       <aside className={`${leftCollapsed ? 'w-20' : 'w-80'} shrink-0 border-r border-slate-200 bg-white flex flex-col transition-all duration-500 z-40`}>
         <div className="p-6 border-b border-slate-100 flex justify-between items-center">
@@ -278,7 +308,6 @@ const App: React.FC = () => {
               scrollRef={contextScrollRef} fileInputRef={null as any} clearHistory={() => setContextChatHistory([])}
             />
             
-            {/* ACCESO A FACTURACIÓN */}
             <button 
               onClick={() => setCurrentView('billing')}
               className="mt-4 p-4 border border-slate-100 rounded-2xl flex items-center justify-between group hover:border-[#5c56f1]/20 hover:bg-[#5c56f1]/5 transition-all"
@@ -320,7 +349,10 @@ const App: React.FC = () => {
           {(isLoading || isAnalyzing) && subTab === 'Mapa de Flujo' ? (
              <div className="absolute inset-0 bg-white/90 backdrop-blur-xl z-[100] flex items-center justify-center p-12">
                <div className="w-full max-w-2xl bg-slate-900 rounded-[48px] p-12 border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden relative text-white">
-                  <p className="text-center font-black animate-pulse">ANALIZANDO TRAZAS DE PROCESO...</p>
+                  <p className="text-center font-black animate-pulse uppercase tracking-[0.4em]">Sincronizando Trazas Digitales...</p>
+                  <div className="mt-8 h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#5c56f1] animate-[loading_2s_ease-in-out_infinite]"></div>
+                  </div>
                </div>
              </div>
           ) : null}

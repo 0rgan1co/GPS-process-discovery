@@ -37,7 +37,7 @@ export const DEMO_CONFIGS: DemoConfig[] = [
   {
     id: 'hr-onboarding',
     name: '[RRHH] Onboarding de Talento',
-    csvPath: './data/hr_onboarding.csv',
+    csvPath: '/data/hr_onboarding.csv',
     description: 'Proceso de incorporación desde oferta hasta integración total.',
     wastes: HIGH_WASTE(5, 30, 85, 40, 10, 20, 10, 45),
     dora: { deploymentFrequency: 'Baja', leadTime: '396 hrs', failureRate: '8%', timeToRestore: '48 hrs' },
@@ -46,7 +46,7 @@ export const DEMO_CONFIGS: DemoConfig[] = [
   {
     id: 'supply-chain-proc',
     name: '[COMPRAS] Cadena de Suministro',
-    csvPath: './data/supply_chain.csv',
+    csvPath: '/data/supply_chain.csv',
     description: 'Adquisición de insumos críticos para producción.',
     wastes: LOW_WASTE(2, 45, 40, 15, 5, 10, 60, 10),
     dora: { deploymentFrequency: 'Media', leadTime: '172 hrs', failureRate: '3%', timeToRestore: '24 hrs' },
@@ -55,7 +55,7 @@ export const DEMO_CONFIGS: DemoConfig[] = [
   {
     id: 'risk-analysis-flow',
     name: '[RIESGOS] Análisis de Riesgo Crédito',
-    csvPath: './data/risk_analysis.csv',
+    csvPath: '/data/risk_analysis.csv',
     description: 'Evaluación técnica de solvencia para clientes B2B.',
     wastes: HIGH_WASTE(10, 50, 95, 30, 15, 25, 5, 35),
     dora: { deploymentFrequency: 'Media', leadTime: '94 hrs', failureRate: '15%', timeToRestore: '72 hrs' },
@@ -64,7 +64,7 @@ export const DEMO_CONFIGS: DemoConfig[] = [
   {
     id: 'manufacturing-flow',
     name: '[FÁBRICA] Línea de Ensamble',
-    csvPath: './data/manufacturing.csv',
+    csvPath: '/data/manufacturing.csv',
     description: 'Monitoreo de tiempos en celda de manufactura robotizada.',
     wastes: LOW_WASTE(5, 10, 15, 5, 2, 5, 30, 5),
     dora: { deploymentFrequency: 'Elite', leadTime: '0.8 hrs', failureRate: '0.5%', timeToRestore: '15 min' },
@@ -73,7 +73,7 @@ export const DEMO_CONFIGS: DemoConfig[] = [
   {
     id: 'it-support-tickets',
     name: '[IT] Resolución de Incidencias',
-    csvPath: './data/it_support.csv',
+    csvPath: '/data/it_support.csv',
     description: 'Flujo de soporte técnico N1 a N3 para servicios cloud.',
     wastes: HIGH_WASTE(0, 15, 65, 20, 25, 10, 5, 20),
     dora: { deploymentFrequency: 'Media', leadTime: '57.6 hrs', failureRate: '12%', timeToRestore: '8 hrs' },
@@ -81,5 +81,4 @@ export const DEMO_CONFIGS: DemoConfig[] = [
   }
 ];
 
-// Mantenemos EXAMPLE_DATASETS pero vacío o como placeholder hasta que App los cargue
 export const EXAMPLE_DATASETS: Dataset[] = [];

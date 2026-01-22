@@ -172,7 +172,7 @@ const LandingView: React.FC<Props> = ({ onStart }) => {
           <div className="max-w-5xl space-y-12">
             <div className="space-y-6">
               <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-[10px] font-black text-[#a5b4fc] uppercase tracking-[0.4em] drop-shadow-sm">DESCUBRIMIENTO DE PROCESOS CON ENFOQUE LEAN</span>
-              <h1 className="text-5xl md:text-[5.5rem] font-black italic uppercase tracking-tighter leading-[0.9] text-white drop-shadow-2xl">
+              <h1 className="text-3xl md:text-6xl font-black italic uppercase tracking-tighter leading-[1.1] text-white drop-shadow-2xl">
                 Revisión de procesos <br/> y ahorros en <br/> <span className="text-[#5c56f1] bg-white px-5 py-1 inline-block -skew-x-6 mt-2 shadow-2xl">ciclos cortos.</span>
               </h1>
               <p className="text-lg md:text-3xl font-black text-[#a5b4fc] uppercase tracking-tighter italic drop-shadow-lg leading-tight">

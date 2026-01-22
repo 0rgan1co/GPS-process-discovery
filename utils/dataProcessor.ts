@@ -14,29 +14,50 @@ const formatDuration = (ms: number): string => {
   return `${seconds}s`;
 };
 
+/**
+ * Limpia una cadena de posibles caracteres invisibles o BOM
+ */
+const cleanHeader = (h: string): string => {
+  return h.replace(/[^\x20-\x7E]/g, '').trim().toLowerCase();
+};
+
 export const parseCSVToDataset = (csvText: string, fileName: string): Dataset => {
-  if (!csvText || csvText.trim().length === 0) {
-    throw new Error('El archivo CSV está vacío.');
+  if (!csvText || typeof csvText !== 'string' || csvText.trim().length === 0) {
+    throw new Error('El archivo CSV está vacío o es inválido.');
   }
 
-  const lines = csvText.trim().split('\n');
+  const trimmedText = csvText.trim();
+
+  // Validación de seguridad para páginas 404 devueltas como HTML
+  if (trimmedText.toLowerCase().startsWith('<!doctype') || trimmedText.toLowerCase().startsWith('<html')) {
+    throw new Error('Error de servidor: Se recibió HTML en lugar de un archivo CSV.');
+  }
+
+  const lines = trimmedText.split(/\r?\n/).filter(line => line.trim().length > 0);
   if (lines.length < 2) {
-    throw new Error('El CSV debe contener al menos los encabezados y una fila de datos.');
+    throw new Error('El archivo debe tener al menos una fila de datos además de los encabezados.');
   }
 
-  const headers = lines[0].split(',').map(h => h.trim());
+  // Detección de separador
+  const firstLine = lines[0];
+  const separator = firstLine.includes(';') && !firstLine.includes(',') ? ';' : ',';
   
-  const caseIdIdx = headers.indexOf('Case ID');
-  const activityIdx = headers.indexOf('Activity');
-  const timestampIdx = headers.indexOf('Timestamp');
+  // Limpieza de encabezados (BOM fix)
+  const headers = firstLine.split(separator).map(cleanHeader);
+  
+  const caseIdIdx = headers.findIndex(h => h.includes('case id'));
+  const activityIdx = headers.findIndex(h => h.includes('activity') || h.includes('actividad'));
+  const timestampIdx = headers.findIndex(h => h.includes('timestamp') || h.includes('fecha'));
 
   if (caseIdIdx === -1 || activityIdx === -1 || timestampIdx === -1) {
-    throw new Error('Formato inválido. Se requieren columnas: "Case ID", "Activity" y "Timestamp".');
+    throw new Error(`Formato incompatible. El archivo debe contener las columnas: "Case ID", "Activity" y "Timestamp". Detectadas: ${headers.join(', ')}`);
   }
 
   const events = lines.slice(1).map((line, index) => {
-    const parts = line.split(',');
-    const timestamp = new Date(parts[timestampIdx]?.trim());
+    const parts = line.split(separator);
+    const tsRaw = parts[timestampIdx]?.trim();
+    const timestamp = new Date(tsRaw);
+    
     return {
       caseId: parts[caseIdIdx]?.trim(),
       activity: parts[activityIdx]?.trim(),
@@ -46,7 +67,7 @@ export const parseCSVToDataset = (csvText: string, fileName: string): Dataset =>
   }).filter(e => e.caseId && e.activity && !isNaN(e.timestamp.getTime()));
 
   if (events.length === 0) {
-    throw new Error("No se encontraron eventos válidos.");
+    throw new Error("No se encontraron registros válidos. Verifique el formato de fecha (YYYY-MM-DD HH:MM:SS).");
   }
 
   events.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
@@ -68,7 +89,6 @@ export const parseCSVToDataset = (csvText: string, fileName: string): Dataset =>
     };
   });
 
-  // CÁLCULOS DE INGENIERÍA DE PROCESOS (LEAN LEAD TIME)
   const durationsMs = casePaths
     .filter(p => p.events.length > 1)
     .map(p => {
@@ -114,7 +134,7 @@ export const parseCSVToDataset = (csvText: string, fileName: string): Dataset =>
   return {
     id: `custom-${Date.now()}`,
     name: fileName.replace('.csv', ''),
-    description: `Dataset real con ${casePaths.length} casos individuales sincronizados.`,
+    description: `Análisis de ${casePaths.length} casos procesados correctamente.`,
     nodes,
     links,
     casePaths,
