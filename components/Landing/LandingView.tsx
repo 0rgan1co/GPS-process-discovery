@@ -79,6 +79,9 @@ const FEATURES = [
 
 const VALUES_URL = "https://reflect.site/g/ggjzqzb390loy9dmlguxzru6xahw2/reflects-values-9df387cfc54b48faa01229ed11630ae6";
 
+// ID del video de referencia compartido por el usuario
+const VIDEO_ID = "CostXs2p6r0";
+
 const LandingView: React.FC<Props> = ({ onStart }) => {
   const [showVideo, setShowVideo] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
@@ -100,53 +103,55 @@ const LandingView: React.FC<Props> = ({ onStart }) => {
   return (
     <div className="h-full overflow-y-auto overflow-x-hidden scroll-smooth bg-[#f8fafc] text-slate-900 font-sans selection:bg-[#5c56f1] selection:text-white flex flex-col">
       
-      {/* MODAL DEMO */}
+      {/* MODAL DEMO (CON AUDIO) */}
       {showVideo && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-xl flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300">
-          <div className="relative w-full max-w-5xl aspect-video bg-black rounded-[40px] overflow-hidden shadow-2xl border border-white/10">
+        <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-2xl flex items-center justify-center p-4 md:p-10 animate-in fade-in zoom-in duration-300">
+          <div className="relative w-full max-w-6xl aspect-video bg-black rounded-[40px] overflow-hidden shadow-2xl border border-white/10">
             <button 
               onClick={() => setShowVideo(false)}
-              className="absolute top-6 right-6 z-10 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all font-black"
+              className="absolute top-6 right-6 z-20 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all font-black border border-white/5"
             >
               ✕
             </button>
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center space-y-6">
-               <div className="w-24 h-24 bg-[#5c56f1] rounded-full flex items-center justify-center animate-pulse shadow-[0_0_50px_rgba(92,86,241,0.5)]">
-                  <div className="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-white border-b-[15px] border-b-transparent ml-2"></div>
-               </div>
-               <div className="space-y-2 px-8">
-                  <h3 className="text-white text-3xl font-black italic uppercase tracking-tighter">Diagnóstico Operativo</h3>
-                  <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">Mapeo de procesos basado en logs de eventos</p>
-               </div>
-               <iframe 
-                className="absolute inset-0 w-full h-full opacity-0 pointer-events-none" 
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" 
-                title="GPS Demo"
-               ></iframe>
-            </div>
+            {/* Iframe se carga solo cuando showVideo es true para evitar que se reproduzca en segundo plano al cerrar */}
+            <iframe 
+              className="w-full h-full"
+              src={`https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&controls=1&rel=0&modestbranding=1`}
+              title="GPS Demo Operativa"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
           </div>
         </div>
       )}
 
       {/* HERO SECTION */}
-      <div className="relative min-h-[95vh] flex flex-col overflow-hidden shrink-0" id="inicio">
-        <div className="absolute inset-0 z-0 overflow-hidden">
-          <div className="absolute inset-0 bg-slate-900/60 z-10"></div>
+      <div className="relative min-h-screen flex flex-col overflow-hidden shrink-0" id="inicio">
+        {/* BACKGROUND VIDEO (MUTED & COVER) */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-slate-900">
+          <div className="absolute inset-0 bg-slate-900/50 z-10"></div>
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900/30 via-transparent to-[#f8fafc] z-20"></div>
-          <video autoPlay muted loop playsInline className="w-full h-full object-cover scale-105">
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-futuristic-technology-digital-interface-background-animation-41054-large.mp4" type="video/mp4" />
-          </video>
+          
+          {/* Contenedor responsivo para el video de fondo */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full min-w-[177.77vh] min-h-[56.25vw]">
+            <iframe 
+              className="absolute top-0 left-0 w-full h-full object-cover"
+              src={`https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${VIDEO_ID}&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&disablekb=1&fs=0`}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            ></iframe>
+          </div>
         </div>
 
         <nav className="max-w-7xl mx-auto w-full px-8 py-8 flex justify-between items-center relative z-50">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => scrollToSection('inicio')}>
             <div className="w-10 h-10 bg-[#5c56f1] text-white rounded-2xl flex items-center justify-center font-black shadow-lg">G</div>
-            <span className="text-xl font-black italic tracking-tighter uppercase text-white">GPS discovery</span>
+            <span className="text-xl font-black italic tracking-tighter uppercase text-white drop-shadow-md">GPS discovery</span>
           </div>
           <div className="hidden md:flex items-center gap-10">
-            <button onClick={() => scrollToSection('funcionalidades')} className="text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white transition">Funcionalidades</button>
-            <button onClick={() => scrollToSection('comparativa')} className="text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white transition">Comparativa</button>
-            <button onClick={() => scrollToSection('precios')} className="text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white transition">Precios</button>
+            <button onClick={() => scrollToSection('funcionalidades')} className="text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white transition drop-shadow-sm">Funcionalidades</button>
+            <button onClick={() => scrollToSection('comparativa')} className="text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white transition drop-shadow-sm">Comparativa</button>
+            <button onClick={() => scrollToSection('precios')} className="text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white transition drop-shadow-sm">Precios</button>
             <button onClick={onStart} className="px-8 py-3 bg-white border border-transparent text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all shadow-xl">Iniciar Análisis</button>
           </div>
         </nav>
@@ -154,15 +159,15 @@ const LandingView: React.FC<Props> = ({ onStart }) => {
         <header className="max-w-7xl mx-auto w-full px-8 flex-1 flex flex-col justify-center relative z-30 text-center lg:text-left py-20">
           <div className="max-w-5xl space-y-12">
             <div className="space-y-6">
-              <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-[10px] font-black text-[#a5b4fc] uppercase tracking-[0.4em]">Análisis Lean + Process Mining</span>
-              <h1 className="text-5xl md:text-[5.5rem] font-black italic uppercase tracking-tighter leading-[0.9] text-white">
-                Diagnóstico de procesos <br/> y cuantificación de ahorros <br/> con <span className="text-[#5c56f1] bg-white px-5 py-1 inline-block -skew-x-6 mt-2">ROI proyectado.</span>
+              <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-[10px] font-black text-[#a5b4fc] uppercase tracking-[0.4em] drop-shadow-sm">Análisis Lean + Process Mining</span>
+              <h1 className="text-5xl md:text-[5.5rem] font-black italic uppercase tracking-tighter leading-[0.9] text-white drop-shadow-2xl">
+                Revisión de procesos <br/> y ahorros en <br/> <span className="text-[#5c56f1] bg-white px-5 py-1 inline-block -skew-x-6 mt-2 shadow-2xl">ciclos cortos.</span>
               </h1>
               <p className="text-lg md:text-3xl font-black text-[#a5b4fc] uppercase tracking-tighter italic drop-shadow-lg leading-tight">
-                Mapeo automático en <span className="text-white underline decoration-[#5c56f1] decoration-4 underline-offset-4">minutos</span> mediante evidencia digital objetiva.
+                Mapeo de procesos con IA en minutos mediante <span className="text-white underline decoration-[#5c56f1] decoration-4 underline-offset-4">datos cuantitativos y cualitativos</span>
               </p>
             </div>
-            <p className="text-lg md:text-2xl font-medium text-slate-200 leading-relaxed max-w-4xl drop-shadow-md">GPS Discovery transforma logs de eventos en modelos visuales. Elimina la subjetividad de las entrevistas para basar la toma de decisiones en hechos extraídos directamente de los sistemas de registro.</p>
+            <p className="text-lg md:text-2xl font-medium text-slate-100 leading-relaxed max-w-4xl drop-shadow-lg">GPS Discovery transforma logs de eventos en modelos visuales. Elimina la subjetividad de las entrevistas para basar la toma de decisiones en hechos extraídos directamente de los sistemas de registro.</p>
             <div className="flex flex-wrap gap-6 pt-4 justify-center lg:justify-start">
               <button onClick={onStart} className="px-10 py-5 bg-[#5c56f1] text-white rounded-[24px] font-black text-xs uppercase tracking-[0.3em] shadow-2xl shadow-indigo-900/40 hover:scale-105 active:scale-95 transition-all">Iniciar Análisis Gratis</button>
               <button onClick={() => setShowVideo(true)} className="px-10 py-5 bg-white/10 backdrop-blur-md border border-white/20 rounded-[24px] font-black text-xs text-white uppercase tracking-[0.3em] hover:bg-white/20 shadow-sm transition-all flex items-center gap-3"><span className="text-lg">▶</span> Ver Demo Operativa</button>
@@ -264,7 +269,7 @@ const LandingView: React.FC<Props> = ({ onStart }) => {
         <div className="max-w-7xl mx-auto px-8 relative z-10">
           <div className="text-center mb-16 space-y-4">
             <h2 className="text-white text-3xl md:text-5xl font-black italic uppercase tracking-tighter">
-              Diagnóstico de procesos y cuantificación de ahorros con <span className="text-[#5c56f1]">ROI proyectado.</span>
+              Revisión de procesos y ahorros en <span className="text-[#5c56f1]">ciclos cortos.</span>
             </h2>
             <p className="text-slate-400 text-xs font-black uppercase tracking-[0.5em]">Escalabilidad desde exploración básica a diagnóstico ilimitado.</p>
           </div>

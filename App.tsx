@@ -8,8 +8,6 @@ import { saveLead } from './lib/supabase';
 import { parseCSVToDataset } from './utils/dataProcessor';
 import { GoogleGenAI, Modality } from '@google/genai';
 import { decode, decodeAudioData, createBlob } from './utils/audio';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 
 // Componentes
 import DataSelector from './components/LeftPanel/DataSelector';
@@ -21,6 +19,8 @@ import DeckGenerator from './components/RightPanel/DeckGenerator';
 import Onboarding from './components/Onboarding/Onboarding';
 import LandingView from './components/Landing/LandingView';
 import InitiativesDashboard from './components/CenterPanel/Iniciativas/InitiativesDashboard';
+import QAView from './components/QA/QAView';
+import BillingView from './components/Billing/BillingView';
 
 const MAIN_TABS = ['EXPLORAR', 'EVALUAR', 'MEJORAR'] as const;
 type MainTab = typeof MAIN_TABS[number];
@@ -30,13 +30,7 @@ const SUB_TABS: Record<MainTab, string[]> = {
   'MEJORAR': ['Iniciativas', 'Priorización', 'Experimentos']
 };
 
-const PRESENTATION_TEMPLATES = [
-  { id: "Standard Executive", slides: ["1. Visión General", "2. Diagnóstico", "3. Cuellos de Botella", "4. Plan de Acción", "5. Proyección ROI"] },
-  { id: "Lean Deep Dive", slides: ["1. Mapa de Valor", "2. Análisis de Desperdicio", "3. Eficiencia de Ciclo", "4. Propuesta Futura", "5. Impacto Operativo"] },
-  { id: "Financial ROI & Impact", slides: ["1. Costo Actual", "2. Fugas de Capital", "3. Ahorros Proyectados", "4. Payback Period", "5. Análisis Costo-Beneficio"] }
-];
-
-type AppView = 'landing' | 'app';
+type AppView = 'landing' | 'app' | 'qa' | 'billing';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>('landing');
@@ -68,7 +62,7 @@ const App: React.FC = () => {
   
   const [showDemoMenu, setShowDemoMenu] = useState(false);
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState(PRESENTATION_TEMPLATES[0]);
+  const [selectedTemplate, setSelectedTemplate] = useState({ id: "Standard Executive", slides: [] });
   const [showCustomPrompt, setShowCustomPrompt] = useState(false);
   const [customReportPrompt, setCustomReportPrompt] = useState('');
   const [isGeneratingDeck, setIsGeneratingDeck] = useState(false);
@@ -88,12 +82,20 @@ const App: React.FC = () => {
   const audioContextRef = useRef<{ input: AudioContext; output: AudioContext } | null>(null);
   const nextStartTimeRef = useRef(0);
 
-  // Lógica de carga de Dataset con retraso de "Análisis IA"
+  // DETECTAR URL PARA MODO QA O FACTURACION
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('view') === 'qa' || params.get('mode') === 'qa') {
+      setCurrentView('qa');
+    } else if (params.get('view') === 'billing') {
+      setCurrentView('billing');
+    }
+  }, []);
+
+  // Lógica de carga de Dataset
   const processDataset = async (csvText: string, name: string, config?: DemoConfig) => {
     setIsAnalyzing(true);
-    // Tiempo random entre 3 y 7 segundos
-    const analysisTime = Math.floor(Math.random() * (7000 - 3000 + 1) + 3000);
-    
+    const analysisTime = Math.floor(Math.random() * (4000) + 2000);
     try {
       const dataset = parseCSVToDataset(csvText, name);
       if (config) {
@@ -101,8 +103,6 @@ const App: React.FC = () => {
         dataset.dora = config.dora;
         dataset.stats = { ...dataset.stats, ...config.baseStats };
       }
-      
-      // Esperar el tiempo de análisis antes de entregar los datos al gráfico
       await new Promise(resolve => setTimeout(resolve, analysisTime));
       setSelectedDataset(dataset);
     } catch (err) {
@@ -141,8 +141,7 @@ const App: React.FC = () => {
   }, [currentView]);
 
   useEffect(() => { setSubTab(SUB_TABS[mainNav][0]); }, [mainNav]);
-  useEffect(() => { if (notification) { const t = setTimeout(() => setNotification(null), 5000); return () => clearTimeout(t); } }, [notification]);
-  
+
   const handleSendMessage = async (textOverride?: string) => {
     if (!selectedDataset) return;
     const textToSend = textOverride || inputText;
@@ -162,12 +161,7 @@ const App: React.FC = () => {
     setContextChatHistory(prev => [...prev, { role: 'user', text: textToSend }]);
     if (!textOverride) setContextInput('');
     setIsContextTyping(true);
-    const response = await getAIResponse(
-      `Analiza el contexto: "${textToSend}"`,
-      selectedDataset,
-      contextChatHistory,
-      businessContext
-    );
+    const response = await getAIResponse(`Analiza el contexto: "${textToSend}"`, selectedDataset, contextChatHistory, businessContext);
     setContextChatHistory(prev => [...prev, { role: 'model', text: response }]);
     setBusinessContext(response);
     setIsContextTyping(false);
@@ -186,25 +180,6 @@ const App: React.FC = () => {
       setNotification({ msg: "Error al procesar CSV", type: 'error' });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleGenerateDeck = async () => {
-    if (!selectedDataset) return;
-    if (!userEmail || !userEmail.includes('@')) {
-      setShowEmailModal(true);
-      return;
-    }
-    setIsGeneratingDeck(true);
-    try {
-      const deck = await generateExecutivePresentation(selectedDataset, customReportPrompt, selectedTemplate.id);
-      setGeneratedDeck(deck);
-      await saveLead(userEmail, selectedDataset.name, businessContext);
-      setNotification({ msg: "Deck generado exitosamente", type: 'success' });
-    } catch (err) {
-      setNotification({ msg: "Error al generar el reporte", type: 'error' });
-    } finally {
-      setIsGeneratingDeck(false);
     }
   };
 
@@ -256,6 +231,15 @@ const App: React.FC = () => {
     setIsLiveActive(false); setIsContextLiveActive(false);
   };
 
+  // RENDERIZADO CONDICIONAL DE VISTAS
+  if (currentView === 'qa') {
+    return <QAView onBack={() => setCurrentView('landing')} />;
+  }
+
+  if (currentView === 'billing') {
+    return <BillingView onBack={() => setCurrentView('app')} />;
+  }
+
   if (currentView === 'landing') {
     return <LandingView onStart={() => setCurrentView('app')} />;
   }
@@ -263,30 +247,7 @@ const App: React.FC = () => {
   return (
     <div className="flex h-screen bg-[#f8fafc] text-[#0f172a] font-sans overflow-hidden">
       {showOnboarding && <Onboarding onClose={() => setShowOnboarding(false)} />}
-      {notification && (
-        <div className={`fixed top-8 left-1/2 -translate-x-1/2 px-8 py-4 rounded-2xl z-[300] shadow-2xl animate-in slide-in-from-top-10 text-[10px] font-black uppercase tracking-widest ${notification.type === 'success' ? 'bg-[#5c56f1] text-white' : 'bg-red-500 text-white'}`}>
-          {notification.msg}
-        </div>
-      )}
-
-      {showEmailModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[250] flex items-center justify-center p-6">
-          <div className="bg-white border border-slate-200 p-10 rounded-[40px] max-w-md w-full shadow-2xl text-center space-y-6">
-            <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">Envío de Reporte</h2>
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Confirma tu email para recibir el análisis.</p>
-            <input 
-              type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)}
-              placeholder="tu@email.com"
-              className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl outline-none focus:border-[#5c56f1]/40 transition text-[11px] font-bold text-slate-900"
-            />
-            <div className="flex gap-4">
-              <button onClick={() => setShowEmailModal(false)} className="flex-1 py-4 bg-slate-100 rounded-2xl font-black text-[10px] uppercase tracking-widest">Cerrar</button>
-              <button onClick={() => { setShowEmailModal(false); handleGenerateDeck(); }} className="flex-1 py-4 bg-[#5c56f1] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest">Confirmar</button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      
       {/* LEFT PANEL */}
       <aside className={`${leftCollapsed ? 'w-20' : 'w-80'} shrink-0 border-r border-slate-200 bg-white flex flex-col transition-all duration-500 z-40`}>
         <div className="p-6 border-b border-slate-100 flex justify-between items-center">
@@ -316,6 +277,21 @@ const App: React.FC = () => {
               handleSendMessage={handleSendContextMessage} startLiveSession={() => startLiveSession('context')}
               scrollRef={contextScrollRef} fileInputRef={null as any} clearHistory={() => setContextChatHistory([])}
             />
+            
+            {/* ACCESO A FACTURACIÓN */}
+            <button 
+              onClick={() => setCurrentView('billing')}
+              className="mt-4 p-4 border border-slate-100 rounded-2xl flex items-center justify-between group hover:border-[#5c56f1]/20 hover:bg-[#5c56f1]/5 transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg">💳</span>
+                <div className="text-left">
+                  <p className="text-[10px] font-black uppercase text-slate-900">Facturación</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase">Gestionar Plan</p>
+                </div>
+              </div>
+              <span className="text-slate-300 group-hover:text-[#5c56f1] transition-colors">→</span>
+            </button>
           </div>
         )}
       </aside>
@@ -343,63 +319,21 @@ const App: React.FC = () => {
         <div className="flex-1 p-8 overflow-hidden relative">
           {(isLoading || isAnalyzing) && subTab === 'Mapa de Flujo' ? (
              <div className="absolute inset-0 bg-white/90 backdrop-blur-xl z-[100] flex items-center justify-center p-12">
-               <div className="w-full max-w-2xl bg-slate-900 rounded-[48px] p-12 border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden relative">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#5c56f1]/10 blur-[80px] rounded-full -mr-32 -mt-32"></div>
-                  <div className="relative z-10 space-y-8">
-                    <div className="flex justify-between items-center">
-                       <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 border-4 border-[#5c56f1] border-t-transparent rounded-full animate-spin"></div>
-                          <span className="text-[10px] font-black text-white uppercase tracking-[0.5em]">AI Core Engine Running</span>
-                       </div>
-                       <span className="text-[10px] font-black text-[#5c56f1] animate-pulse">ESTADO: ANALIZANDO TRAZAS</span>
-                    </div>
-
-                    <div className="h-px bg-white/10 w-full"></div>
-
-                    <div className="space-y-4 font-mono text-[9px] text-white/40 uppercase tracking-widest overflow-hidden h-32">
-                       <p className="animate-in slide-in-from-bottom-2 duration-300">>> Extrayendo eventos desde registro digital...</p>
-                       <p className="animate-in slide-in-from-bottom-2 duration-300 delay-75">>> Identificando variantes de proceso: {Math.floor(Math.random()*15)+5} detectadas</p>
-                       <p className="animate-in slide-in-from-bottom-2 duration-300 delay-150">>> Calculando medianas de transición (Lead Time)...</p>
-                       <p className="animate-in slide-in-from-bottom-2 duration-300 delay-200">>> Mapeando dependencias críticas N1 a N3...</p>
-                       <p className="animate-in slide-in-from-bottom-2 duration-300 delay-300 text-[#5c56f1]">>> Sincronizando gemelo digital del flujo operacional...</p>
-                    </div>
-
-                    <div className="flex justify-between items-end">
-                       <div className="space-y-1">
-                          <p className="text-[8px] font-black text-white/20 uppercase tracking-widest">Dataset origen</p>
-                          <p className="text-[11px] font-black text-white italic">{selectedDemoConfig?.name || 'CSV Externo'}</p>
-                       </div>
-                       <div className="text-right">
-                          <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mt-2">Generando Visualización...</p>
-                       </div>
-                    </div>
-                  </div>
+               <div className="w-full max-w-2xl bg-slate-900 rounded-[48px] p-12 border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden relative text-white">
+                  <p className="text-center font-black animate-pulse">ANALIZANDO TRAZAS DE PROCESO...</p>
                </div>
              </div>
           ) : null}
 
           {selectedDataset ? (
             <>
-              {mainNav === 'EXPLORAR' && subTab === 'Mapa de Flujo' && (
-                <ProcessGraph 
-                  dataset={selectedDataset} 
-                  animationSpeed={animationSpeed} 
-                  setAnimationSpeed={setAnimationSpeed} 
-                />
-              )}
+              {mainNav === 'EXPLORAR' && subTab === 'Mapa de Flujo' && <ProcessGraph dataset={selectedDataset} animationSpeed={animationSpeed} setAnimationSpeed={setAnimationSpeed} />}
               {mainNav === 'EXPLORAR' && subTab === 'Estadísticas' && <Statistics dataset={selectedDataset} />}
               {mainNav === 'EXPLORAR' && subTab === 'Colaboradores' && <Collaborators onNotify={(msg, type) => setNotification({ msg, type })} />}
               {mainNav === 'MEJORAR' && subTab === 'Iniciativas' && <InitiativesDashboard dataset={selectedDataset} />}
             </>
           ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center space-y-6">
-                <div className="w-20 h-20 bg-white border border-slate-200 rounded-[32px] flex items-center justify-center mx-auto shadow-xl">
-                   <span className="text-4xl grayscale opacity-30">🗺️</span>
-                </div>
-                <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.4em]">Selecciona un proceso para comenzar el descubrimiento</p>
-              </div>
-            </div>
+            <div className="flex items-center justify-center h-full text-slate-400 uppercase font-black text-[10px] tracking-[0.4em]">Selecciona un proceso</div>
           )}
         </div>
       </main>
@@ -407,9 +341,7 @@ const App: React.FC = () => {
       {/* RIGHT PANEL */}
       <aside className={`${rightCollapsed ? 'w-20' : 'w-96'} shrink-0 border-l border-slate-200 bg-white flex flex-col transition-all duration-500 z-40`}>
         <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-          <button onClick={() => setRightCollapsed(!rightCollapsed)} className="p-2 hover:bg-slate-50 rounded-xl transition text-slate-400">
-            {rightCollapsed ? '←' : '→'}
-          </button>
+          <button onClick={() => setRightCollapsed(!rightCollapsed)} className="p-2 hover:bg-slate-50 rounded-xl transition text-slate-400">{rightCollapsed ? '←' : '→'}</button>
           {!rightCollapsed && (
             <div className="flex bg-slate-100 p-1 rounded-xl">
               <button onClick={() => setToolTab('report')} className={`px-4 py-1.5 text-[8px] font-black rounded-lg transition ${toolTab === 'report' ? 'bg-white text-[#5c56f1] shadow-sm' : 'text-slate-400'}`}>REPORTES</button>
@@ -431,7 +363,7 @@ const App: React.FC = () => {
                 isGenerating={isGeneratingDeck} selectedTemplate={selectedTemplate} setSelectedTemplate={setSelectedTemplate}
                 showTemplateMenu={showTemplateMenu} setShowTemplateMenu={setShowTemplateMenu}
                 showCustomPrompt={showCustomPrompt} setShowCustomPrompt={setShowCustomPrompt}
-                customPrompt={customReportPrompt} setCustomPrompt={setCustomReportPrompt} onGenerate={handleGenerateDeck}
+                customPrompt={customReportPrompt} setCustomPrompt={setCustomReportPrompt} onGenerate={() => setNotification({msg: "Simulación de reporte", type: 'success'})}
               />
             )}
           </div>

@@ -33,6 +33,22 @@ export const saveLead = async (email: string, datasetName: string, context: stri
   return error ? null : data;
 };
 
+export const saveScenarioFeedback = async (scenarioId: string, title: string, feedback: string) => {
+  if (!supabase) {
+    console.warn("Supabase no configurado. Feedback:", { scenarioId, feedback });
+    return { success: true, local: true };
+  }
+  const { data, error } = await supabase
+    .from('qa_feedback')
+    .insert([{ 
+      scenario_id: scenarioId, 
+      scenario_title: title, 
+      feedback_text: feedback, 
+      created_at: new Date() 
+    }]);
+  return error ? { success: false, error } : { success: true, data };
+};
+
 export const getSavedDatasets = async () => {
   if (!supabase) return [];
   try {
