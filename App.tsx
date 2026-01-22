@@ -286,7 +286,7 @@ const App: React.FC = () => {
               <div className="flex items-center gap-3">
                 <span className="text-lg">💳</span>
                 <div className="text-left">
-                  <p className="text-[10px] font-black uppercase text-slate-900">Facturación</p>
+                  <p className="text-[10px] font-black uppercase text-slate-900">Mejorar Plan</p>
                   <p className="text-[8px] font-bold text-slate-400 uppercase">Gestionar Plan</p>
                 </div>
               </div>

@@ -28,7 +28,7 @@ const BillingView: React.FC<Props> = ({ onBack }) => {
                 </button>
               ))}
               <button className="text-left px-3 py-2 rounded-xl text-sm font-bold text-[#a78bfa] bg-[#8b5cf6]/10 border border-[#8b5cf6]/10 shadow-[inset_0_0_20px_rgba(139,92,246,0.05)]">
-                Billing
+                Mejorar Plan
               </button>
             </nav>
           </div>
@@ -108,9 +108,11 @@ const BillingView: React.FC<Props> = ({ onBack }) => {
                  <div className="w-12 h-12 bg-slate-800 rounded-full overflow-hidden border border-white/10 p-0.5 shadow-xl">
                     <img className="w-full h-full rounded-full object-cover" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Riccardo" alt="User" />
                  </div>
-                 <div className="flex flex-col">
-                   <span className="text-sm font-bold text-white tracking-tight">Riccardo</span>
-                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">COO @ TechLogistics</span>
+                 <div className="flex items-center gap-4">
+                   <div className="flex flex-col">
+                     <span className="text-sm font-bold text-white tracking-tight">Riccardo</span>
+                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">COO @ TechLogistics</span>
+                   </div>
                  </div>
                </div>
             </div>
