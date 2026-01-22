@@ -8,6 +8,7 @@ import { saveLead } from './lib/supabase';
 import { parseCSVToDataset } from './utils/dataProcessor';
 import { GoogleGenAI, Modality } from '@google/genai';
 import { decode, decodeAudioData, createBlob } from './utils/audio';
+import { EMBEDDED_DEMO_DATA } from './data/embeddedDemoData';
 
 // Componentes
 import DataSelector from './components/LeftPanel/DataSelector';
@@ -113,7 +114,8 @@ const App: React.FC = () => {
         dataset.dora = config.dora;
         dataset.stats = { ...dataset.stats, ...config.baseStats };
       }
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Simulación de análisis para impacto visual
+      await new Promise(resolve => setTimeout(resolve, 1500));
       setSelectedDataset(dataset);
       return dataset;
     } catch (err: any) {
@@ -130,12 +132,31 @@ const App: React.FC = () => {
       if (dataSource === 'demo' && selectedDemoConfig) {
         setIsLoading(true);
         try {
-          const response = await fetch(selectedDemoConfig.csvPath);
-          if (!response.ok) throw new Error(`El archivo de demo no está disponible (${response.status})`);
-          const csvText = await response.text();
+          // Intento de carga dinámica con fallback resiliente para producción
+          let csvText = '';
+          try {
+            const response = await fetch(selectedDemoConfig.csvPath);
+            const contentType = response.headers.get('content-type');
+            
+            // Si el fetch falla, no es un 200, o devuelve HTML (error de hosting), usamos los datos incrustados
+            if (response.ok && contentType && !contentType.includes('text/html')) {
+              csvText = await response.text();
+            } else {
+              console.warn(`Fetch de demo falló o devolvió HTML (${response.status}). Usando datos de respaldo incrustados.`);
+              csvText = EMBEDDED_DEMO_DATA[selectedDemoConfig.id];
+            }
+          } catch (fetchErr) {
+            console.warn("Error de red cargando demo. Usando fallback incrustado.");
+            csvText = EMBEDDED_DEMO_DATA[selectedDemoConfig.id];
+          }
+
+          if (!csvText) {
+             throw new Error("No se pudieron recuperar los datos de demostración.");
+          }
+
           await processDataset(csvText, selectedDemoConfig.name, selectedDemoConfig);
         } catch (err: any) {
-          console.error("Demo Fetch Error:", err);
+          console.error("Demo Load Error:", err);
           setNotification({ msg: err.message, type: 'error' });
         } finally {
           setIsLoading(false);

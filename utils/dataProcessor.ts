@@ -15,10 +15,11 @@ const formatDuration = (ms: number): string => {
 };
 
 /**
- * Limpia una cadena de posibles caracteres invisibles o BOM
+ * Limpia una cadena de posibles caracteres invisibles, BOM o de control
+ * Extremadamente permisivo para entornos de producción variables.
  */
 const cleanHeader = (h: string): string => {
-  return h.replace(/[^\x20-\x7E]/g, '').trim().toLowerCase();
+  return h.replace(/[^\x20-\x7E]/g, '').trim().toLowerCase().replace(/['"]+/g, '');
 };
 
 export const parseCSVToDataset = (csvText: string, fileName: string): Dataset => {
@@ -28,9 +29,9 @@ export const parseCSVToDataset = (csvText: string, fileName: string): Dataset =>
 
   const trimmedText = csvText.trim();
 
-  // Validación de seguridad para páginas 404 devueltas como HTML
+  // Validación de seguridad para páginas 404 devueltas como HTML (común en SPAs en prod)
   if (trimmedText.toLowerCase().startsWith('<!doctype') || trimmedText.toLowerCase().startsWith('<html')) {
-    throw new Error('Error de servidor: Se recibió HTML en lugar de un archivo CSV.');
+    throw new Error('Formato inválido: Se recibió contenido HTML. El archivo podría no existir en el servidor.');
   }
 
   const lines = trimmedText.split(/\r?\n/).filter(line => line.trim().length > 0);
@@ -38,19 +39,19 @@ export const parseCSVToDataset = (csvText: string, fileName: string): Dataset =>
     throw new Error('El archivo debe tener al menos una fila de datos además de los encabezados.');
   }
 
-  // Detección de separador
+  // Detección de separador (soporte para Coma y Punto y Coma)
   const firstLine = lines[0];
   const separator = firstLine.includes(';') && !firstLine.includes(',') ? ';' : ',';
   
-  // Limpieza de encabezados (BOM fix)
+  // Limpieza agresiva de encabezados
   const headers = firstLine.split(separator).map(cleanHeader);
   
-  const caseIdIdx = headers.findIndex(h => h.includes('case id'));
+  const caseIdIdx = headers.findIndex(h => h.includes('case id') || h.includes('caseid'));
   const activityIdx = headers.findIndex(h => h.includes('activity') || h.includes('actividad'));
   const timestampIdx = headers.findIndex(h => h.includes('timestamp') || h.includes('fecha'));
 
   if (caseIdIdx === -1 || activityIdx === -1 || timestampIdx === -1) {
-    throw new Error(`Formato incompatible. El archivo debe contener las columnas: "Case ID", "Activity" y "Timestamp". Detectadas: ${headers.join(', ')}`);
+    throw new Error(`Columnas no encontradas. Se requiere: Case ID, Activity, Timestamp. Detectadas: ${headers.join(', ')}`);
   }
 
   const events = lines.slice(1).map((line, index) => {
@@ -67,7 +68,7 @@ export const parseCSVToDataset = (csvText: string, fileName: string): Dataset =>
   }).filter(e => e.caseId && e.activity && !isNaN(e.timestamp.getTime()));
 
   if (events.length === 0) {
-    throw new Error("No se encontraron registros válidos. Verifique el formato de fecha (YYYY-MM-DD HH:MM:SS).");
+    throw new Error("No se encontraron registros de eventos válidos. Verifique el formato de las celdas.");
   }
 
   events.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
@@ -134,7 +135,7 @@ export const parseCSVToDataset = (csvText: string, fileName: string): Dataset =>
   return {
     id: `custom-${Date.now()}`,
     name: fileName.replace('.csv', ''),
-    description: `Análisis de ${casePaths.length} casos procesados correctamente.`,
+    description: `Dataset de ${casePaths.length} casos individuales sincronizados.`,
     nodes,
     links,
     casePaths,
