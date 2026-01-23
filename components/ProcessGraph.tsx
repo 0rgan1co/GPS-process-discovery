@@ -251,6 +251,7 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed, setAnimationSp
       .on("start", (event, d) => {
         if (!event.active) simulation.alphaTarget(0.3).restart();
         d.fx = d.x;
+        d.fx = d.x;
         d.fy = d.y;
       })
       .on("drag", (event, d) => {
@@ -403,14 +404,23 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed, setAnimationSp
         <button onClick={() => handleFitView(false)} className="bg-white/90 backdrop-blur-md border border-slate-200 px-3 py-1.5 rounded-xl hover:bg-slate-50 shadow-md font-black text-[7px] text-slate-700 uppercase tracking-widest">CENTRAR</button>
       </div>
 
-      {/* RESOLUCION (IZQUIERDA) - ULTRA COMPACTA */}
+      {/* RESOLUCION (IZQUIERDA) - ULTRA COMPACTA - DESHABILITADA */}
       <div className={`absolute bottom-3 left-3 z-50 transition-all duration-1000 ${isRevealing ? 'opacity-0 translate-y-[20px]' : 'opacity-100 translate-y-0'}`}>
-        <div className="bg-white/90 backdrop-blur-md px-3 rounded-2xl border border-slate-200 shadow-xl flex items-center gap-2 h-[38px] min-w-[110px]">
+        <div className="bg-white/90 backdrop-blur-md px-3 rounded-2xl border border-slate-200 shadow-xl flex items-center gap-2 h-[38px] min-w-[110px] opacity-60 grayscale">
           <div className="flex flex-col">
             <span className="text-[5px] font-black text-[#5c56f1] uppercase leading-none">Resolución</span>
             <span className="text-[8px] font-black text-slate-800 leading-none">{Math.round(simplification * 100)}%</span>
           </div>
-          <input type="range" min="0.05" max="1.0" step="0.05" value={simplification} onChange={(e) => setSimplification(parseFloat(e.target.value))} className="w-12 h-0.5 bg-slate-100 rounded-full appearance-none cursor-pointer accent-[#5c56f1]" />
+          <input 
+            type="range" 
+            min="0.05" 
+            max="1.0" 
+            step="0.05" 
+            value={simplification} 
+            onChange={(e) => setSimplification(parseFloat(e.target.value))} 
+            disabled
+            className="w-12 h-0.5 bg-slate-100 rounded-full appearance-none cursor-not-allowed accent-slate-400" 
+          />
         </div>
       </div>
 
