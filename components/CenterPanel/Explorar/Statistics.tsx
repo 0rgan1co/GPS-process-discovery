@@ -63,7 +63,7 @@ const Statistics: React.FC<Props> = ({ dataset }) => {
                 <div className="absolute top-0 right-0 p-3 opacity-10 text-xl">💡</div>
                 <h4 className="text-[9px] font-black text-amber-600 uppercase tracking-[0.2em] mb-2">Importante:</h4>
                 <p className="text-[10px] font-bold text-amber-800/80 leading-relaxed italic">
-                  "Para asegurar la integridad del análisis Lead Time, los casos con un solo evento (WIP inicial sin transiciones) han sido excluidos del cálculo de promedios para evitar sesgos hacia el cero. Las duraciones se computan estrictamente entre el primer y último evento del rastro digital."
+                  Para asegurar la integridad del análisis Lead Time, los casos con un solo evento (WIP inicial sin transiciones) han sido excluidos del cálculo de promedios para evitar sesgos hacia el cero. Las duraciones se computan estrictamente entre el primer y último evento del rastro digital.
                 </p>
              </div>
           </div>
