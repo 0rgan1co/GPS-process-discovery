@@ -348,7 +348,7 @@ const App: React.FC = () => {
 
       {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col min-0 bg-[#f8fafc]">
-        <nav className="h-24 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-8 flex justify-between items-center z-30">
+        <nav className="h-20 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-8 flex justify-between items-center z-30">
           <div className="flex gap-10">
             {MAIN_TABS.map(tab => (
               <button key={tab} onClick={() => setMainNav(tab)} className={`text-[10px] font-black uppercase tracking-[0.4em] transition-all relative py-2 ${mainNav === tab ? 'text-[#5c56f1]' : 'text-slate-400 hover:text-slate-600'}`}>
@@ -366,7 +366,7 @@ const App: React.FC = () => {
           </div>
         </nav>
 
-        <div className="flex-1 p-8 overflow-hidden relative">
+        <div className="flex-1 p-3 overflow-hidden relative">
           {(isLoading || isAnalyzing) && subTab === 'Mapa de Flujo' ? (
              <div className="absolute inset-0 bg-white/90 backdrop-blur-xl z-[100] flex items-center justify-center p-12">
                <div className="w-full max-w-2xl bg-slate-900 rounded-[48px] p-12 border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden relative text-white">

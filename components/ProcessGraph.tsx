@@ -102,17 +102,6 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed, setAnimationSp
     };
   }, [dataset, simplification]);
 
-  const toggleFullscreen = useCallback(() => {
-    if (!containerRef.current) return;
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  }, []);
-
   const handleFitView = useCallback((immediate = false) => {
     if (!svgRef.current || !gRef.current || !zoomRef.current) return;
     const bounds = gRef.current.getBBox();
@@ -122,7 +111,8 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed, setAnimationSp
     const fullHeight = svgRef.current.clientHeight;
     const midX = bounds.x + bounds.width / 2;
     const midY = bounds.y + bounds.height / 2;
-    const scale = 0.8 / Math.max(bounds.width / fullWidth, bounds.height / fullHeight);
+    // Escala aumentada de 0.8 a 0.92 para llenar mejor el contenedor
+    const scale = 0.92 / Math.max(bounds.width / fullWidth, bounds.height / fullHeight);
 
     const transform = d3.zoomIdentity
       .translate(fullWidth / 2, fullHeight / 2)
@@ -135,6 +125,37 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed, setAnimationSp
       d3.select(svgRef.current).transition().duration(700).call(zoomRef.current.transform, transform);
     }
   }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!containerRef.current) return;
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  }, []);
+
+  // Efecto para centrar automáticamente cuando cambia el estado de fullscreen o el tamaño
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!document.fullscreenElement;
+      setIsFullscreen(isCurrentlyFullscreen);
+      // Pequeño delay para permitir que el navegador recalcule el layout antes de centrar
+      setTimeout(() => handleFitView(false), 300);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('resize', () => handleFitView(true));
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('resize', () => handleFitView(true));
+    };
+  }, [handleFitView]);
 
   const calculatePath = (d: any) => {
     const dx = d.target.x - d.source.x;
@@ -202,7 +223,6 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed, setAnimationSp
       .style("cursor", "grab")
       .style("opacity", 0);
 
-    // Rediseño de nodos para mayor contraste
     nodeElements.append("rect")
       .attr("class", "node-rect")
       .attr("width", 240).attr("height", 50).attr("x", -120).attr("y", -25).attr("rx", 15)
@@ -297,14 +317,8 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed, setAnimationSp
             isCritical: duration > (timeRange.totalMs * 0.15)
           });
 
-          // Un nodo se considera "activo" si un token está llegando a él o saliendo de él
-          // Aquí iluminamos tanto el origen como el destino durante la transición
           activeNodesSet.add(startEv.activity);
           activeNodesSet.add(endEv.activity);
-        } else {
-          // Si el proceso terminó en este nodo pero estamos justo en el final de los datos
-          const lastEv = path.events[lastOccurredIndex];
-          // Podríamos marcarlo como activo brevemente si acaba de llegar
         }
       }
     });
@@ -318,7 +332,6 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed, setAnimationSp
     if (tokenLayer.empty()) tokenLayer = g.append("g").attr("class", "tokens-layer");
 
     const updateVisuals = () => {
-      // 1. ACTUALIZAR TOKENS (CASOS)
       const pathMap = new Map<string, SVGPathElement>();
       g.selectAll<SVGPathElement, any>(".link-path").each(function() {
         const id = d3.select(this).attr("data-id");
@@ -362,7 +375,6 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed, setAnimationSp
           }
         });
 
-      // 2. ACTUALIZAR ESTADO DE ACTIVACIÓN DE NODOS
       g.selectAll<SVGGElement, any>(".node-group").each(function(d: any) {
         const isActive = activeNodes.has(d.id);
         const isSelected = selectedNode === d.id;
@@ -409,7 +421,7 @@ const ProcessGraph: React.FC<Props> = ({ dataset, animationSpeed, setAnimationSp
   };
 
   return (
-    <div ref={containerRef} className={`relative w-full h-full bg-[#fcfdfe] border border-slate-200 rounded-[40px] overflow-hidden shadow-2xl ${isFullscreen ? 'fixed inset-0 z-[100] rounded-none' : ''}`}>
+    <div ref={containerRef} className={`relative w-full h-full bg-[#fcfdfe] border border-slate-200 rounded-[32px] overflow-hidden shadow-2xl ${isFullscreen ? 'fixed inset-0 z-[100] rounded-none' : ''}`}>
       <div id="tour-flow-map" className="absolute inset-0 z-10">
         <svg ref={svgRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
       </div>
